@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 import person.AbstractIndividualInterface;
 import person.Person_ACCEPtPlusSingleInflection;
 import population.Population_ACCEPtPlus;
-import simulation.Runnable_Population_ACCEPtPlus;
-import simulation.Runnable_Population_ACCEPtPlus_Infection;
+import sim.Runnable_Population_ACCEPtPlus;
+import sim.Runnable_Population_ACCEPtPlus_Infection;
 import util.FileZipper;
 import util.PersonClassifier;
 

@@ -11,8 +11,8 @@ import java.util.Arrays;
 import person.AbstractIndividualInterface;
 import person.Person_ACCEPtPlusSingleInflection;
 import population.Population_ACCEPtPlus;
-import simulation.Runnable_Population_ACCEPtPlus;
-import simulation.Runnable_Population_ACCEPtPlus_Infection;
+import sim.Runnable_Population_ACCEPtPlus;
+import sim.Runnable_Population_ACCEPtPlus_Infection;
 import infection.ChlamydiaInfection;
 import infection.ChlamydiaInfectionClassSpecific;
 import java.io.FileFilter;
@@ -28,8 +28,8 @@ import org.apache.commons.math3.distribution.AbstractRealDistribution;
 import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.distribution.GammaDistribution;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.apache.commons.math3.random.MersenneTwister;
 import population.Population_ACCEPtPlus_MixedBehaviour;
-import random.MersenneTwisterFastRandomGenerator;
 import random.RandomGenerator;
 import util.Classifier_ACCEPt;
 import util.Classifier_Gender_Age_Specific_Infection;
@@ -50,8 +50,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
     public int NUM_SIM_TOTAL = 1000;
     public String IMPORT_PATH = "../ACCEPtPlusDirVM/ImportDir"; //;
+    
+    public File BATCH_BASE_PATH = new File("../ACCEPtPlusDirVM/1000_Runs");
+    public int SKIP_DATA = 0;
 
-    public static double[] BEST_FIT_PARAMETER = new double[]{
+    public double[] BEST_FIT_PARAMETER = new double[]{
         /*
         0.00049703264848381095,
         0.0009999964904922165,
@@ -74,7 +77,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         //0.04, //0.08058424309571056,
         //0.12,
         0.08,
-        0.06005890880872483,        
+        0.06005890880872483,
         //From C:\Users\Bhui\OneDrive - UNSW\ACCEPt\OptResult_AgeSpecTran_GA                
         //0.009054253860880417,
         //0.10005890880872483,
@@ -115,14 +118,13 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // Mixing - Random
         0.0,
         // ClassSpecific Transmission Prob - or set them as negative if not used
-        
+
         -0.12,
         -0.12,
         -0.12,
         -0.04,
         -0.04,
         -0.04,
-         
         // From C:\Users\Bhui\OneDrive - UNSW\ACCEPt\OptResult_AgeSpecTran_GA    	
         /*
         0.1430962072120926,
@@ -131,7 +133,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         0.3929934055032376 - 0.1430962072120926,
         0.38479320977846554 - 0.12928530021587178,
         0.353920282147386 - 0.11342604999394956,
-        */
+         */
         // From HPC version   
         /*
         0.4919576888823929,
@@ -160,9 +162,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         //BEST_FIT_TRANS_SD_MF, BEST_FIT_TRANS_SD_FM
         // Set to 0 if not used
         0.10,
-        0.04,
-    
-    };
+        0.04,};
 
     public static final int INDEX_TEST_RATE_MALE = 0;
     public static final int INDEX_TEST_RATE_FEMALE = INDEX_TEST_RATE_MALE + 1;
@@ -249,12 +249,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         null,};
 
     public static void main(String[] arg) throws IOException, ClassNotFoundException, InterruptedException {
+        Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(arg);        
+        run.batchRun();
+    }
 
-        File targetDir;
-        File BATCH_BASE_PATH = new File("../ACCEPtPlusDirVM/1000_Runs");
-        Object[] inputParam;
-        long tic;
-        Run_Population_ACCEPtPlus_InfectionIntro_Batch batchRun = new Run_Population_ACCEPtPlus_InfectionIntro_Batch();
+    public Run_Population_ACCEPtPlus_InfectionIntro_Batch(String[] arg) {                       
 
         if (arg.length > 0) {
             if (!arg[0].isEmpty()) {
@@ -265,23 +264,20 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         if (arg.length > 1) {
             if (!arg[1].isEmpty()) {
                 System.out.println("Setting IMPORT_PATH as " + arg[1]);
-                batchRun.IMPORT_PATH = arg[1];
+                IMPORT_PATH = arg[1];
             }
         }
         if (arg.length > 2) {
             if (!arg[2].isEmpty()) {
                 System.out.println("Num of sim total = " + arg[2]);
-                batchRun.NUM_SIM_TOTAL = Integer.parseInt(arg[2]);
+                NUM_SIM_TOTAL = Integer.parseInt(arg[2]);
             }
-        }
-
-        int skipData = 0;
-        int datasetCount = 0;
+        }                
 
         if (arg.length > 3) {
             if (!arg[3].isEmpty()) {
-                skipData = Integer.parseInt(arg[3]);
-                System.out.println("Skip dataset = 0b" + Integer.toBinaryString(skipData));
+                SKIP_DATA = Integer.parseInt(arg[3]);
+                System.out.println("Skip dataset = 0b" + Integer.toBinaryString(SKIP_DATA));
             }
         }
         if (arg.length > 4) {
@@ -299,12 +295,23 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             }
         }
 
-        BATCH_BASE_PATH.mkdirs();
+        
 
+    }
+
+    public void batchRun()
+            throws ClassNotFoundException, IOException, InterruptedException {
+        File targetDir;
+        Object[] inputParam;
+        long tic;
         int DURATION_MASS_SCR = 6 * 7;
+        Run_Population_ACCEPtPlus_InfectionIntro_Batch batchRun = this;
+        int datasetCount = 0;
+        
+        BATCH_BASE_PATH.mkdirs();                
 
         // 0: Baseline rate
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Baseline");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -320,11 +327,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 1: Intervention rate 
         // Testing rate - Meeting note page 40
         // Retest and PT rate: From email 20171019 TC Summary
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Intervention_rate");
             inputParam = new Object[]{
                 0.124f, 0.251f,
@@ -342,9 +348,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 2: 30 Plus testing
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Reduced_30_Plus");
             inputParam = new Object[]{
                 0.15f, 0.25f,
@@ -359,9 +364,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 3: No 30 Plus
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
 
             targetDir = new File(BATCH_BASE_PATH, "No_30_Plus");
             inputParam = new Object[]{
@@ -377,9 +381,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 4: Baseline rate - low sensitivity
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Baseline_Test_Sensitivity_Low");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -393,10 +396,9 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 5: Increase testing rate - low sensitivity 
         // from Zakher et al. Annals of Internal Medicine 2014;161 (12):884-893
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Increase_Testing_Test_Sensitivity_Low");
             inputParam = new Object[]{
                 0.15f, 0.25f, DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
@@ -409,9 +411,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 6: Baseline rate - high sensitivity
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Baseline_Test_Sensitivity_High");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -425,9 +426,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 7: Increase testing rate - high sensitivity
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Increase_Testing_Test_Sensitivity_High");
             inputParam = new Object[]{
                 0.15f, 0.25f, DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
@@ -440,9 +440,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 8: Mass screen - default rate
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_30_PT");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -482,9 +481,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 9:  Mass screen + 50 PT
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_50_PT_During");
 
             inputParam = new Object[]{
@@ -527,9 +525,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 10: Mass screen + 60 PT
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_60_PT_During");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -571,9 +568,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 11: Mass screen + 70 PT   
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_70_PT_During");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -615,9 +611,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 12: Mass screen + 50 PT for 3 months yr   
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_50_PT_3_month");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -659,9 +654,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 13: Mass screen + 60 PT for 3 mths   
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_60_PT_3_month");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -703,9 +697,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 14: Mass screen + 70 PT for 3 mths   
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_70_PT_3_month");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
@@ -747,9 +740,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 15: Mass screen - 1 month 
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_1_month");
             int massScr = 30;
             inputParam = new Object[]{
@@ -791,9 +783,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 16: Mass screen - 2 month 
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_2_month");
             int massScr = 2 * 30;
             inputParam = new Object[]{
@@ -835,9 +826,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 17: Mass screen - 1 month PT 70 3 month
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_1_month_70_PT_3_month");
             int massScr = 1 * 30;
             inputParam = new Object[]{
@@ -880,9 +870,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
         // 18: Mass screen - 2 month PT 70 3 month
-        if (((skipData >> datasetCount) & 1) == 0) {
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "MassScreen_2_month_70_PT_3_month");
             int massScr = 2 * 30;
             inputParam = new Object[]{
@@ -925,7 +914,6 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-
     }
 
     public void singleRun(File testDir, Object[] parameters)
@@ -935,7 +923,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         testDir.mkdirs(); // Create directory if not exists
         File importDir = new File(IMPORT_PATH);
 
-        MersenneTwisterFastRandomGenerator rng = new MersenneTwisterFastRandomGenerator(BASE_SEED);
+        MersenneTwister rng = new MersenneTwister(BASE_SEED);
 
         File[] existedPop = importDir.exists() ? importDir.listFiles(new FileFilter() {
             @Override
@@ -1117,7 +1105,13 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
     }
 
-    private static void setPartnerAccquistionBehaviour(Runnable_Population_ACCEPtPlus sim, PrintStream textOutput) {
+    public double[] getParameter() {
+        return BEST_FIT_PARAMETER;
+    }
+    
+    
+
+    private void setPartnerAccquistionBehaviour(Runnable_Population_ACCEPtPlus sim, PrintStream textOutput) {
 
         Population_ACCEPtPlus pop = sim.getPopulation();
 
@@ -1459,7 +1453,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_FEMALE_TO_MALE] + BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA],
                         BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_FEMALE_TO_MALE],}; // M->F, F->M
 
-                    if (BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_MF] > 0 || BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_FM] > 0 ) {
+                    if (BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_MF] > 0 || BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_FM] > 0) {
                         RandomGenerator popRNG = pop.getInfList()[0].getRNG();
                         double[] betaParam;
                         BetaDistribution beta;

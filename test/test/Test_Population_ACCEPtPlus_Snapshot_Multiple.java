@@ -10,10 +10,10 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import person.AbstractIndividualInterface;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS;
 import util.FileZipper;
 
 public class Test_Population_ACCEPtPlus_Snapshot_Multiple {

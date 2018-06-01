@@ -1,4 +1,4 @@
-package simulation;
+package sim;
 
 import infection.TreatableInfectionInterface;
 import java.io.BufferedOutputStream;
@@ -15,9 +15,9 @@ import random.MersenneTwisterFastRandomGenerator;
 import random.RandomGenerator;
 import relationship.RelationshipMap;
 import relationship.SingleRelationship;
-import static simulation.Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_AT;
-import static simulation.Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_PATH;
-import static simulation.Runnable_Population_ACCEPtPlus.RUNNABLE_SIM_DURATION;
+import static sim.Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_AT;
+import static sim.Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_PATH;
+import static sim.Runnable_Population_ACCEPtPlus.RUNNABLE_SIM_DURATION;
 import util.AppendableObjOutstream;
 import util.ArrayUtilsRandomGenerator;
 import util.Classifier_ACCEPt;

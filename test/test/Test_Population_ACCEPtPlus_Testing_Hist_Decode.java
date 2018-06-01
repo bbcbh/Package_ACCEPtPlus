@@ -9,13 +9,13 @@ import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.HIST_HEADER_GENDER;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.HIST_HEADER_NEXT_PT;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.HIST_HEADER_TOTAL_LENGTH;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.HIST_OFFSET_TEST_CURRENT_INFECTION_FROM_AGE;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.HIST_OFFSET_TEST_INFECTED;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.HIST_OFFSET_TEST_TIME;
-import static simulation.Runnable_Population_ACCEPtPlus_Infection.HIST_OFFSET_TOTAL_LENGTH;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.HIST_HEADER_GENDER;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.HIST_HEADER_NEXT_PT;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.HIST_HEADER_TOTAL_LENGTH;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.HIST_OFFSET_TEST_CURRENT_INFECTION_FROM_AGE;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.HIST_OFFSET_TEST_INFECTED;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.HIST_OFFSET_TEST_TIME;
+import static sim.Runnable_Population_ACCEPtPlus_Infection.HIST_OFFSET_TOTAL_LENGTH;
 
 /**
  *

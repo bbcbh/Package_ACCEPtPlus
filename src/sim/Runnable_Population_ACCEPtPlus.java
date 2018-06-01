@@ -1,4 +1,4 @@
-package simulation;
+package sim;
 
 import availability.AbstractAvailability;
 import availability.Availability_ACCEPtPlus_SelectiveMixing;
