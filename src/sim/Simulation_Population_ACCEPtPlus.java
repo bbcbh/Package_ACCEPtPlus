@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import run.Run_Population_ACCEPtPlus_InfectionIntro_Batch;
 import static sim.SimulationInterface.PROP_CLASS;
 import static sim.SimulationInterface.PROP_NAME;
@@ -20,7 +18,7 @@ import util.PropValUtils;
 public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
     public static final String[] PROP_NAME_ACCEPT = {
-        "PROP_SKIP_DATA_SET ", // Binary number indic to skip which scenario. eg. 524286 - Baseline only,   5116 - ACCEPt Manscript              
+        "PROP_SKIP_DATA_SET", // Binary number indic to skip which scenario. eg. 524286 - Baseline only,   5116 - ACCEPt Manscript              
         "PROP_INTRO_TYPE"
     };
     public static final Class[] PROP_CLASS_ACCEPT = {
@@ -118,6 +116,13 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
         try {
             Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
+            for(int v = 0; v < propModelInitStr.length; v++){
+                if(propModelInitStr[v] != null){
+                    // Best fit parameters
+                    run.getParameter()[v] = Double.parseDouble(propModelInitStr[v]);
+                }
+                
+            }                                    
             run.batchRun();
 
         } catch (ClassNotFoundException ex) {

@@ -40,7 +40,14 @@ import util.PersonClassifier;
 /**
  *
  * @author Ben
- * @version 20180423
+ * @version 20180626
+ * 
+ * <pre>
+ * History:
+ * 
+ * 20180626 - Add parameter input for BEST_FIT_DUR_SD_MALE and BEST_FIT_DUR_SD_FEMALE 
+ * 
+ * </pre>
  */
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
@@ -55,20 +62,6 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     public int SKIP_DATA = 0;
 
     public double[] BEST_FIT_PARAMETER = new double[]{
-        /*
-        0.00049703264848381095,
-        0.0009999964904922165,
-        0.005111174844307004,
-        0.015142304722707228,
-        432.99262444104454,
-        5.174928269626601E-4,
-        0.001,
-        0.100,
-        0.100,
-        0.001,
-        0.001,
-        0.001,  
-         */
         0,
         0,
         //BEST_FIT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA
@@ -162,7 +155,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         //BEST_FIT_TRANS_SD_MF, BEST_FIT_TRANS_SD_FM
         // Set to 0 if not used
         0.10,
-        0.04,};
+        0.04,
+        //BEST_FIT_DUR_SD_MALE, BEST_FIT_DUR_SD_FEMALE
+        7,
+        7                       
+    };
 
     public static final int INDEX_TEST_RATE_MALE = 0;
     public static final int INDEX_TEST_RATE_FEMALE = INDEX_TEST_RATE_MALE + 1;
@@ -215,6 +212,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     public static final int BEST_FIT_INF_DUR_25_29_F = BEST_FIT_INF_DUR_20_24_F + 1;
     public static final int BEST_FIT_TRANS_SD_MF = BEST_FIT_INF_DUR_25_29_F + 1;
     public static final int BEST_FIT_TRANS_SD_FM = BEST_FIT_TRANS_SD_MF + 1;
+    public static final int BEST_FIT_DUR_SD_MALE = BEST_FIT_TRANS_SD_FM + 1;
+    public static final int BEST_FIT_DUR_SD_FEMALE = BEST_FIT_DUR_SD_MALE + 1;
 
     public static final Object[] DEFAULT_RATE = {
         //INDEX_TEST_RATE_MALE - Meeting note page 40
@@ -1403,17 +1402,18 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                             distVar = new double[inf_classifier.numClass()][ChlamydiaInfection.DIST_TOTAL][];
                             // Male  
                             setupClassSpecificInfectionParam(distVar, dist, ct_inf,
-                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_MALE], 7}, 0, ChlamydiaInfectionClassSpecific.DIST_INFECT_ASY_DUR_INDEX, textOutput);
+                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_MALE], 
+                                        BEST_FIT_PARAMETER[BEST_FIT_DUR_SD_MALE]}, 0, ChlamydiaInfectionClassSpecific.DIST_INFECT_ASY_DUR_INDEX, textOutput);
 
                             setupClassSpecificInfectionParam(distVar, dist, ct_inf,
-                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_MALE], 7}, 0, ChlamydiaInfectionClassSpecific.DIST_INFECT_SYM_DUR_INDEX, textOutput);
+                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_MALE], BEST_FIT_PARAMETER[BEST_FIT_DUR_SD_MALE]}, 0, ChlamydiaInfectionClassSpecific.DIST_INFECT_SYM_DUR_INDEX, textOutput);
 
                             // Female
                             setupClassSpecificInfectionParam(distVar, dist, ct_inf,
-                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_FEMALE], 7}, 1, ChlamydiaInfectionClassSpecific.DIST_INFECT_ASY_DUR_INDEX, textOutput);
+                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_FEMALE], BEST_FIT_PARAMETER[BEST_FIT_DUR_SD_FEMALE]}, 1, ChlamydiaInfectionClassSpecific.DIST_INFECT_ASY_DUR_INDEX, textOutput);
 
                             setupClassSpecificInfectionParam(distVar, dist, ct_inf,
-                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_FEMALE], 7}, 1, ChlamydiaInfectionClassSpecific.DIST_INFECT_SYM_DUR_INDEX, textOutput);
+                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_FEMALE], BEST_FIT_PARAMETER[BEST_FIT_DUR_SD_FEMALE]}, 1, ChlamydiaInfectionClassSpecific.DIST_INFECT_SYM_DUR_INDEX, textOutput);
 
                         } else {
                             inf_classifier = new Classifier_Gender_Age_Specific_Infection();
