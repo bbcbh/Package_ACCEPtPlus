@@ -28,7 +28,6 @@ import person.AbstractIndividualInterface;
 import person.Person_ACCEPtPlusSingleInflection;
 import population.Population_ACCEPtPlus;
 import population.Population_ACCEPtPlus_MixedBehaviour;
-import random.MersenneTwisterFastRandomGenerator;
 import random.RandomGenerator;
 import sim.Runnable_Population_ACCEPtPlus;
 import sim.Runnable_Population_ACCEPtPlus_Infection;
@@ -76,10 +75,21 @@ import org.apache.commons.math3.distribution.AbstractRealDistribution;
 import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.distribution.GammaDistribution;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import random.MersenneTwisterRandomGenerator;
 
 /**
  *
- * @author Bhui
+ * @author Ben Hui
+ * @version 20180619
+ * 
+ * <pre>
+ * History
+ * 
+ * 20180619
+ *  - Remove reference to deprecated RNG
+ *  - Change parameter to fit under 8 parameters setting 
+ * 
+ * </pre>
  */
 public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]> {
 
@@ -104,9 +114,9 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
         // Male 16-19, 20-24,25-29, 30-39, 40-49, 50-59, 60-69, (not used)
         // 1.4f, 1.4f, 1.4f 1.2f, 1.1f, 1.0f, 0.9f, Float.NaN,      
         // 2.5f, 2.7f, 2.8f    
-        0.85, //1.1,
-        1.4,
-        1.4,
+        0.7, //1.1,
+        1.1,
+        1.3,
         1.2,
         1.1,
         1.0,
@@ -115,9 +125,9 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
         // 1.0f, 1.1f, 1.1f, 1.0f, 0.9f, 0.8f, 0.6f, Float.NaN,;
         // 2.0f, 1.9f, 1.8f   
         1.0,
-        1.2,
-        1.2,
-        1.0,
+        1.35,
+        1.45,
+        1.3,
         0.9,
         0.8,
         0.6,
@@ -194,17 +204,15 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
             this.param[OPT_PARAM_GENDER_WEIGHT_16_19_M] = param[7];
             this.param[OPT_PARAM_GENDER_WEIGHT_20_24_M] = param[8];
             this.param[OPT_PARAM_GENDER_WEIGHT_25_29_M] = param[9];                                                           
-        } else if (param.length == 8) {
-            this.usingAgeSpec = true;
-            //System.out.println(this.getClass().getName() + "Parameter to optimise = Age specific tranmission");
-            this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
-            this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
-            this.param[OPT_PARAM_TRAN_PROB_TO_16_19_M] = param[2];
-            this.param[OPT_PARAM_TRAN_PROB_TO_20_24_M] = param[3];
-            this.param[OPT_PARAM_TRAN_PROB_TO_25_29_M] = param[4];
-            this.param[OPT_PARAM_TRAN_PROB_TO_16_19_F_EXTRA] = param[5];
-            this.param[OPT_PARAM_TRAN_PROB_TO_20_24_F_EXTRA] = param[6];
-            this.param[OPT_PARAM_TRAN_PROB_TO_25_29_F_EXTRA] = param[7];
+        } else if (param.length == 8) {            
+            this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[0];
+            this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[1];  
+            this.param[OPT_PARAM_GENDER_WEIGHT_16_19_M] = param[2];
+            this.param[OPT_PARAM_GENDER_WEIGHT_20_24_M] = param[3];
+            this.param[OPT_PARAM_GENDER_WEIGHT_25_29_M] = param[4];
+            this.param[OPT_PARAM_GENDER_WEIGHT_16_19_F] = param[5];
+            this.param[OPT_PARAM_GENDER_WEIGHT_20_24_F] = param[6];
+            this.param[OPT_PARAM_GENDER_WEIGHT_25_29_F] = param[7];            
         } else if (param.length == 16) {
             this.usingAgeSpec = true;
             //System.out.println(this.getClass().getName() + "Parameter to optimise = Age specific tranmission and duration");
@@ -271,7 +279,7 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
                 Runnable_Population_ACCEPtPlus_Infection sim = new Runnable_Population_ACCEPtPlus_Infection(simId);
 
                 final long seed = pop.getSeed();
-                RandomGenerator rng = new MersenneTwisterFastRandomGenerator(seed);
+                RandomGenerator rng = new MersenneTwisterRandomGenerator(seed);
 
                 pop.setRNG(rng);
                 sim.setPopulation(pop);
