@@ -1,7 +1,10 @@
 package sim;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Properties;
 import run.Run_Population_ACCEPtPlus_InfectionIntro_Batch;
@@ -9,6 +12,7 @@ import static sim.SimulationInterface.PROP_CLASS;
 import static sim.SimulationInterface.PROP_NAME;
 import util.PersonClassifier;
 import util.PropValUtils;
+import util.Snapshot_Population_ACCEPtPlus;
 
 /**
  *
@@ -116,19 +120,62 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
         try {
             Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
-            for(int v = 0; v < propModelInitStr.length; v++){
-                if(propModelInitStr[v] != null){
+            for (int v = 0; v < propModelInitStr.length; v++) {
+                if (propModelInitStr[v] != null) {
                     // Best fit parameters
                     run.getParameter()[v] = Double.parseDouble(propModelInitStr[v]);
                 }
-                
-            }                                    
+
+            }
             run.batchRun();
 
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace(System.err);
         }
 
+    }
+
+    public static void main(String[] arg) throws IOException, InterruptedException, ClassNotFoundException {
+        String path = arg[0]; // Location of .prop file
+
+        File dir = new File(path);
+
+        System.out.println("Generating results set as described in " + dir.getAbsolutePath());
+
+        Simulation_Population_ACCEPtPlus sim = new Simulation_Population_ACCEPtPlus();
+
+        File propFile = new File(dir, SimulationInterface.FILENAME_PROP);
+
+        if (!propFile.exists()) {
+
+            System.err.println("Error: PROP file " + propFile.getCanonicalPath() + " not found.");
+
+        } else {
+            Path propFilePath = propFile.toPath();
+
+            Properties prop;
+            prop = new Properties();
+            try (InputStream inStr = java.nio.file.Files.newInputStream(propFilePath)) {
+                prop.loadFromXML(inStr);
+            }
+
+            sim.setBaseDir(dir);
+            sim.loadProperties(prop);
+            sim.generateOneResultSet();
+
+            File[] singleResultSet = dir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.isDirectory();
+                }
+            });
+
+            for (File f : singleResultSet) {
+                Snapshot_Population_ACCEPtPlus.decodePopZips(new String[]{f.getAbsolutePath()});
+
+            }
+
+        }
     }
 
 }

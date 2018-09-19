@@ -1,5 +1,6 @@
 package test;
 
+import util.Snapshot_Population_ACCEPtPlus;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -7,7 +8,8 @@ import run.Run_Population_ACCEPtPlus_InfectionIntro_Batch;
 
 /**
  *
- * @author Administrator
+ * @author Ben Hui
+ * @deprecated  - if possible use Test_Population_ACCEPtPlus_Simulation_Batch instead
  */
 public class Test_Population_ACCEPtPlus_InfectionIntro_Batch {
 
@@ -31,11 +33,7 @@ public class Test_Population_ACCEPtPlus_InfectionIntro_Batch {
        
        for(int i = 0; i < targetDirs.length; i++){
            System.out.println("Decoding results in " + targetDirs[i].getAbsolutePath());
-           Test_Population_ACCEPtPlus_Snapshot_Single.main(new String[]{targetDirs[i].getAbsolutePath()});
-           
-           
-           
-           
+           Snapshot_Population_ACCEPtPlus.decodePopZips(new String[]{targetDirs[i].getAbsolutePath()});                                            
        }
        
        

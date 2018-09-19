@@ -1,5 +1,6 @@
 package test;
 
+import util.Snapshot_Population_ACCEPtPlus;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileFilter;
@@ -15,6 +16,12 @@ import static sim.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_T
 import static sim.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS;
 import static sim.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS;
 import util.FileZipper;
+
+/**
+ * 
+ * @author Ben Hui
+ * @deprecated if possible use Test_Population_ACCEPtPlus_Simulation_Batch instead
+ */
 
 public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
 
@@ -41,7 +48,7 @@ public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
 
             if (decodeBase) {
                 System.out.println("Decoding results in " + res.getAbsolutePath());
-                Test_Population_ACCEPtPlus_Snapshot_Single.main(new String[]{res.getAbsolutePath()});
+                Snapshot_Population_ACCEPtPlus.decodePopZips(new String[]{res.getAbsolutePath()});
             }
             if (decodePreval) {
 

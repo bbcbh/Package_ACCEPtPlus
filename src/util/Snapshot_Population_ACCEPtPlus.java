@@ -1,4 +1,4 @@
-package test;
+package util;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -10,26 +10,21 @@ import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import person.AbstractIndividualInterface;
 import person.Person_ACCEPtPlusSingleInflection;
 import population.Population_ACCEPtPlus;
-import util.FileZipper;
-import util.PersonClassifier;
+import relationship.SingleRelationship;
 
 /**
  *
  * @author Ben Hui
  */
-public class Test_Population_ACCEPtPlus_Snapshot_Single {
+public class Snapshot_Population_ACCEPtPlus {
 
     public static final String DIR_PATH
-            =  //"C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\100_Runs_BestFit\\Baseline"; 
-            //"C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\OptResult\\1509807122756";        
-            //"C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\OptResult_LowTran\\1510325724613";
-            //"C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\OptResult_LowTran_Local\\1509728364870";
-            "C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\16_Runs\\Baseline";
-            //"C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\MassSrnEffect\\MassScreen_70_PT";
-    
+            =  "C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\16_Runs\\Baseline";
+            
 
     static final PersonClassifier CLASSIFIER_ACCEPT_GENDER_AGE_GRP = new PersonClassifier() {
         @Override
@@ -66,18 +61,20 @@ public class Test_Population_ACCEPtPlus_Snapshot_Single {
             return 8;
         }
     };
-
-    public static void main(String[] arg) throws IOException, ClassNotFoundException {
-        File importDir = new File(DIR_PATH);
-        
-        if(arg.length > 0){
-            importDir = new File(arg[0]);
+    public static void decodePopZips(String[] dirPaths) throws IOException, ClassNotFoundException {
+        for (String dirPath : dirPaths) {
+            decodePopZips(dirPath);
         }
-                
+        
+    }
 
-        //ObjectInputStream input = new ObjectInputStream(new FileInputStream(new File(DIR_PATH, "testing_history_0.obj")));        
-        //java.util.concurrent.ConcurrentHashMap obj = (java.util.concurrent.ConcurrentHashMap) input.readObject();
-        //input.close();
+    public static void decodePopZips(String dirPath) throws IOException, ClassNotFoundException {
+        File importDir = new File(DIR_PATH);
+
+        if (dirPath != null) {
+            importDir = new File(dirPath);
+        }
+        
         final int OUTPUT_NUM_PARTNER_LAST_YEAR = 0;
         final int OUTPUT_NUM_PARTNER_LAST_YEAR_BY_AGE = 1;
         final int OUTPUT_LIFETIME_PARTNERS_ALL = 2;
@@ -92,6 +89,7 @@ public class Test_Population_ACCEPtPlus_Snapshot_Single {
         final int OUTPUT_LORENZ = 11;
         final int OUTPUT_PREVALENCE_BY_AGE_GENDER_ASHC = 12;
         final int OUTPUT_PERCENT_VIRGIN = 13;
+        final int OUTPUT_PARTNERSHIP_AGE_DIFF = 14;
 
         File[] outputFiles = new File[]{
             new File(importDir, "output_num_partner_last_year.csv"),
@@ -107,9 +105,8 @@ public class Test_Population_ACCEPtPlus_Snapshot_Single {
             new File(importDir, "output_prevalence_by_activity.csv"),
             new File(importDir, "output_lorenz.csv"),
             new File(importDir, "output_prevalence_by_age_gender_ASHC.csv"),
-            new File(importDir, "output_percent_virgin.csv")
-
-        };
+            new File(importDir, "output_percent_virgin.csv"),
+            new File(importDir, "output_partnership_age_difference.csv"),};
 
         PrintWriter[] outputWri = new PrintWriter[outputFiles.length];
 
@@ -170,7 +167,10 @@ public class Test_Population_ACCEPtPlus_Snapshot_Single {
                 case OUTPUT_PERCENT_VIRGIN:
                     outputWri[i].println("Sim, Male,,,, Female,,,,");
                     outputWri[i].println(", Age 16-17, Age 18-29, Age 20-24, Age 25-29, Age 16-17, Age 18-29, Age 20-24, Age 25-29,");
+                    break;
 
+                case OUTPUT_PARTNERSHIP_AGE_DIFF:
+                    outputWri[i].println("Sim, Age Difference (Male-Female)");
                     break;
 
             }
@@ -180,7 +180,7 @@ public class Test_Population_ACCEPtPlus_Snapshot_Single {
 
             @Override
             public boolean accept(File file) {
-                return file.getName().startsWith("pop") &&  file.getName().endsWith(".zip");
+                return file.getName().startsWith("pop") && file.getName().endsWith(".zip");
             }
         });
 
@@ -217,7 +217,7 @@ public class Test_Population_ACCEPtPlus_Snapshot_Single {
             File popFile = popFiles[filePt];
             int[] numByACCEPtGenderAge = new int[CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()];
             int[] numVirginByACCEPtGenderAge = new int[CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()];
-            
+
             Population_ACCEPtPlus pop;
 
             try {
@@ -560,12 +560,12 @@ public class Test_Population_ACCEPtPlus_Snapshot_Single {
             outputWri[OUTPUT_NUM_PARTNER_LAST_YEAR_BY_AGE_MALE].println();
             outputWri[OUTPUT_NUM_PARTNER_LAST_YEAR_BY_AGE_FEMALE].println();
 
-            System.out.println("Analysis for " + popFiles[filePt].getName() + " done");
+            System.out.println("Analysis for " + popFiles[filePt].getAbsolutePath() + " done");
             //System.out.println("Number of partnership " + pop.getRelMap()[0].edgeSet().size());
             //System.out.println("Next Inf Long = " + pop.getInfList()[0].getRNG().nextLong());
 
             // OUTPUT_PERCENT_VIRGIN
-            outputWri[OUTPUT_PERCENT_VIRGIN].print(filePt);            
+            outputWri[OUTPUT_PERCENT_VIRGIN].print(filePt);
             for (int v = 0; v < numByACCEPtGenderAge.length; v++) {
                 outputWri[OUTPUT_PERCENT_VIRGIN].print(',');
                 outputWri[OUTPUT_PERCENT_VIRGIN].print(100f * ((float) numVirginByACCEPtGenderAge[v])
@@ -573,6 +573,24 @@ public class Test_Population_ACCEPtPlus_Snapshot_Single {
             }
             outputWri[OUTPUT_PERCENT_VIRGIN].println();
 
+            //OUTPUT_PARTNERSHIP_AGE_DIFF
+            relationship.RelationshipMap[] relMap = pop.getRelMap();
+
+            for (int r = 0; r < relMap.length; r++) {
+                Iterator<SingleRelationship> edges = relMap[r].edgeSet().iterator();
+
+                while (edges.hasNext()) {
+                    SingleRelationship rel = edges.next();                    
+                    AbstractIndividualInterface[] partners =  rel.getLinks(pop.getLocalDataMap());                    
+                    double maleAge =  partners[0].isMale()? partners[0].getAge() :  partners[1].getAge();
+                    double femaleAge =  partners[0].isMale()? partners[1].getAge() :  partners[0].getAge();                                                           
+
+                    outputWri[OUTPUT_PARTNERSHIP_AGE_DIFF].print(filePt);
+                    outputWri[OUTPUT_PARTNERSHIP_AGE_DIFF].print(',');
+                    outputWri[OUTPUT_PARTNERSHIP_AGE_DIFF].print(maleAge - femaleAge);
+                    outputWri[OUTPUT_PARTNERSHIP_AGE_DIFF].println();
+                }
+            }
         }
 
         errWri.println("Num of error = " + numErr);

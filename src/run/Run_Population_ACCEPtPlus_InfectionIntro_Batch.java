@@ -41,12 +41,12 @@ import util.PersonClassifier;
  *
  * @author Ben
  * @version 20180626
- * 
+ *
  * <pre>
  * History:
- * 
- * 20180626 - Add parameter input for BEST_FIT_DUR_SD_MALE and BEST_FIT_DUR_SD_FEMALE 
- * 
+ *
+ * 20180626 - Add parameter input for BEST_FIT_DUR_SD_MALE and BEST_FIT_DUR_SD_FEMALE
+ *
  * </pre>
  */
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
@@ -57,7 +57,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
     public int NUM_SIM_TOTAL = 1000;
     public String IMPORT_PATH = "../ACCEPtPlusDirVM/ImportDir"; //;
-    
+
     public File BATCH_BASE_PATH = new File("../ACCEPtPlusDirVM/1000_Runs");
     public int SKIP_DATA = 0;
 
@@ -158,7 +158,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         0.04,
         //BEST_FIT_DUR_SD_MALE, BEST_FIT_DUR_SD_FEMALE
         7,
-        7                       
+        7
     };
 
     public static final int INDEX_TEST_RATE_MALE = 0;
@@ -248,11 +248,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         null,};
 
     public static void main(String[] arg) throws IOException, ClassNotFoundException, InterruptedException {
-        Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(arg);        
+        Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(arg);
         run.batchRun();
     }
 
-    public Run_Population_ACCEPtPlus_InfectionIntro_Batch(String[] arg) {                       
+    public Run_Population_ACCEPtPlus_InfectionIntro_Batch(String[] arg) {
 
         if (arg.length > 0) {
             if (!arg[0].isEmpty()) {
@@ -271,7 +271,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 System.out.println("Num of sim total = " + arg[2]);
                 NUM_SIM_TOTAL = Integer.parseInt(arg[2]);
             }
-        }                
+        }
 
         if (arg.length > 3) {
             if (!arg[3].isEmpty()) {
@@ -294,8 +294,6 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             }
         }
 
-        
-
     }
 
     public void batchRun()
@@ -306,8 +304,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         int DURATION_MASS_SCR = 6 * 7;
         Run_Population_ACCEPtPlus_InfectionIntro_Batch batchRun = this;
         int datasetCount = 0;
-        
-        BATCH_BASE_PATH.mkdirs();                
+
+        BATCH_BASE_PATH.mkdirs();
 
         // 0: Baseline rate
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
@@ -1107,8 +1105,6 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     public double[] getParameter() {
         return BEST_FIT_PARAMETER;
     }
-    
-    
 
     private void setPartnerAccquistionBehaviour(Runnable_Population_ACCEPtPlus sim, PrintStream textOutput) {
 
@@ -1123,7 +1119,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 avail[i].setRelationshipMap(pop.getRelMap()[i]);
                 ((Availability_ACCEPtPlus_SelectiveMixing_Rand) avail[i]).setParameter("KEY_MATCH_TYPE", mixType);
             }
-            //System.out.println("Mixing type = " + mixType.toString());
+
+            if (textOutput != null) {
+                textOutput.println("Mixing type = " + mixType.toString());
+            }
         }
 
         // 3: ACCEPT_FIELDS_PARTNER_IN_12_MONTHS_TARGET_WEIGHTING
@@ -1402,7 +1401,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                             distVar = new double[inf_classifier.numClass()][ChlamydiaInfection.DIST_TOTAL][];
                             // Male  
                             setupClassSpecificInfectionParam(distVar, dist, ct_inf,
-                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_MALE], 
+                                    new double[]{BEST_FIT_PARAMETER[BEST_FIT_PARAM_AVE_INF_DUR_MALE],
                                         BEST_FIT_PARAMETER[BEST_FIT_DUR_SD_MALE]}, 0, ChlamydiaInfectionClassSpecific.DIST_INFECT_ASY_DUR_INDEX, textOutput);
 
                             setupClassSpecificInfectionParam(distVar, dist, ct_inf,

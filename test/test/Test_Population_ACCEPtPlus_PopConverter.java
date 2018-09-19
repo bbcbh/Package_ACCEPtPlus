@@ -18,7 +18,8 @@ import util.FileZipper;
 
 /**
  *
- * @author bhui
+ * @author Ben Hui
+ * @deprecated  - No longer supported
  */
 public class Test_Population_ACCEPtPlus_PopConverter {
 

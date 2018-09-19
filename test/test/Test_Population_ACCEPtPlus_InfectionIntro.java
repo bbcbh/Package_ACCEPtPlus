@@ -34,6 +34,7 @@ import static run.Run_Population_ACCEPtPlus_InfectionIntro_Batch.BEST_FIT_PARAM_
 /**
  *
  * @author Ben Hui
+ * @deprecated  if possible use Test_Population_ACCEPtPlus_Simulation_Batch instead
  */
 public class Test_Population_ACCEPtPlus_InfectionIntro {
 
