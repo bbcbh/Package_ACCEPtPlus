@@ -17,7 +17,7 @@ import util.Snapshot_Population_ACCEPtPlus;
 /**
  *
  * @author Ben Hui
- * @version 20180601
+ * @version 20181011
  */
 public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
@@ -110,13 +110,14 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
     public void generateOneResultSet() throws IOException, InterruptedException {
         String[] rArg;
 
-        rArg = new String[6];
+        rArg = new String[7];
         rArg[0] = baseDir.getAbsolutePath();
         rArg[1] = propVal[PROP_POP_IMPORT_PATH] == null ? "" : (String) propVal[PROP_POP_IMPORT_PATH];
         rArg[2] = propVal[PROP_NUM_SIM_PER_SET] == null ? "" : ((Integer) propVal[PROP_NUM_SIM_PER_SET]).toString();
         rArg[3] = propVal[PROP_SKIP_DATA_SET] == null ? "" : ((Integer) propVal[PROP_SKIP_DATA_SET]).toString();
         rArg[4] = propVal[PROP_INTRO_TYPE] == null ? "" : ((Integer) propVal[PROP_INTRO_TYPE]).toString();
         rArg[5] = propVal[PROP_SNAP_FREQ] == null ? "" : ((Integer) propVal[PROP_SNAP_FREQ]).toString();
+        rArg[6] = propVal[PROP_NUM_SNAP] == null? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
 
         try {
             Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);

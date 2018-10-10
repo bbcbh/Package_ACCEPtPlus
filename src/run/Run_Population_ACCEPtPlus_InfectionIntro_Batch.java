@@ -46,6 +46,7 @@ import util.PersonClassifier;
  * History:
  *
  * 20180626 - Add parameter input for BEST_FIT_DUR_SD_MALE and BEST_FIT_DUR_SD_FEMALE
+ * 20181011 - Add support for simulation run time
  *
  * </pre>
  */
@@ -56,6 +57,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     public static final long BASE_SEED = 2251912970037127827l;
 
     public int NUM_SIM_TOTAL = 1000;
+    public int SIM_DURATION = 30 * 12 * 30;
     public String IMPORT_PATH = "../ACCEPtPlusDirVM/ImportDir"; //;
 
     public File BATCH_BASE_PATH = new File("../ACCEPtPlusDirVM/1000_Runs");
@@ -291,6 +293,15 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             if (!arg[5].isEmpty()) {
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ] = Integer.parseInt(arg[5]);
                 System.out.println("Prevalence store freq = " + DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ].toString());
+            }
+        }
+
+        if (arg.length > 6) {
+            if (!arg[6].isEmpty()) {
+                int numSnap = Integer.parseInt(arg[6]);
+                SIM_DURATION = (DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ] == null) ? 
+                        (30 * numSnap) : (((Integer) DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]) * numSnap);
+                System.out.println("Sim duration = " + SIM_DURATION);
             }
         }
 
@@ -972,10 +983,9 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 long seed = pop.getSeed();
                 sim.setPopulation(pop);
                 int startTime = pop.getGlobalTime();
-                int numYrToRun = 100;
 
-                sim.getRunnableParam()[Runnable_Population_ACCEPtPlus.RUNNABLE_SIM_DURATION] = new int[]{12 * numYrToRun, 30};
-                sim.getRunnableParam()[Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_AT] = new int[]{startTime + (numYrToRun) * 360};
+                sim.getRunnableParam()[Runnable_Population_ACCEPtPlus.RUNNABLE_SIM_DURATION] = new int[]{SIM_DURATION, 30};
+                sim.getRunnableParam()[Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_AT] = new int[]{startTime + SIM_DURATION};
                 sim.getRunnableParam()[Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_PATH]
                         = new File[]{importDir};
 
