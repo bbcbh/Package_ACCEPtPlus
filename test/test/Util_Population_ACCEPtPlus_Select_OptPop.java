@@ -9,7 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
-import optimisation.ParameterConstraintTransform;
+import transform.ParameterConstraintTransformSineCurve;
 
 /**
  *
@@ -26,7 +26,7 @@ public class Util_Population_ACCEPtPlus_Select_OptPop {
         final String TARGET_FILE_NAME = "opt_run_134.txt";
 
         if (LINE_TO_MATCH == null) {
-            ParameterConstraintTransform[] constraints;
+            ParameterConstraintTransformSineCurve[] constraints;
 
             System.out.println("Reading contraint file....");
             File costrainFile = new File(RES_DIR, "ParamConstriants.csv");
@@ -36,13 +36,13 @@ public class Util_Population_ACCEPtPlus_Select_OptPop {
                 while (constraintReader.readLine() != null) {
                     lnNum++;
                 }
-                constraints = new ParameterConstraintTransform[lnNum];
+                constraints = new ParameterConstraintTransformSineCurve[lnNum];
                 lnNum = 0;
                 BufferedReader constraintReader2 = new BufferedReader(new FileReader(costrainFile));
 
                 while ((line = constraintReader2.readLine()) != null) {
                     String[] ent = line.split(",");
-                    constraints[lnNum] = new ParameterConstraintTransform(new double[]{
+                    constraints[lnNum] = new ParameterConstraintTransformSineCurve(new double[]{
                         Double.parseDouble(ent[0]), Double.parseDouble(ent[1])});
                     lnNum++;
                 }

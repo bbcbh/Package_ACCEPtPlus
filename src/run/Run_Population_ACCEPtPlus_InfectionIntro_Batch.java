@@ -347,7 +347,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         new float[]{4 * 30}, new float[]{0.281f}
                     },},
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS]};
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
+                    
+            };
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -367,7 +371,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     },},
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY],
-                new float[]{0.5f, 0.25f, 0.0f}};
+                new float[]{0.5f, 0.25f, 0.0f},
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
+            };
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -388,7 +395,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     },},
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY],
-                new float[]{0f, 0f, 0f}};
+                new float[]{0f, 0f, 0f},
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
+            };
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -405,7 +415,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 new float[][][]{
                     new float[][]{new float[]{4 * 30}, new float[]{0.236f * 2}},}, // From email 20171019 TC Summary
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS]};
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
+            };
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -424,7 +437,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         new float[]{4 * 30}, new float[]{0.281f}
                     },},
                 0.5f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS]};
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
+            };
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -443,7 +459,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         new float[]{4 * 30}, new float[]{0.281f}
                     },},
                 0.8f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS]};
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
+            };
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -460,7 +479,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 new float[][][]{
                     new float[][]{new float[]{4 * 30}, new float[]{0.236f * 2}},}, // From email 20171019 TC Summary
                 0.8f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS]};
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
+            };
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -1271,7 +1293,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     setPartnerAccquistionBehaviour(sim, textOutput);
 
                     // Infection intro
-                    if (param.length < INDEX_INTRO_INFECTION || ((Integer) param[INDEX_INTRO_INFECTION]).intValue() != 0) {
+                    if (param.length < INDEX_INTRO_INFECTION || ((Integer) param[INDEX_INTRO_INFECTION]) != 0) {
 
                         ((float[]) sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_INTRO_RATE])[0]
                                 = Math.max((float) BEST_FIT_PARAMETER[BEST_FIT_PARAM_INTRO_RATE_MALE], 0);

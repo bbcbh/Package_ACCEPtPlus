@@ -13,7 +13,7 @@ import java.util.Arrays;
 import optimisation.AbstractParameterOptimiser;
 import optimisation.AbstractResidualFunc;
 import optimisation.NelderMeadOptimiser;
-import optimisation.ParameterConstraintTransform;
+import transform.ParameterConstraintTransformSineCurve;
 import random.MersenneTwisterRandomGenerator;
 import random.RandomGenerator;
 
@@ -147,7 +147,7 @@ public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation {
         File parentDir = new File(optBaseDir);
         parentDir.mkdirs();
 
-        ParameterConstraintTransform[] constraints;
+        ParameterConstraintTransformSineCurve[] constraints;
 
         //<editor-fold defaultstate="collapsed" desc="Intialise constraints">   
         File costrainFile = new File(parentDir, FILENAME_PARAM_CONSTRIANTS);
@@ -157,17 +157,18 @@ public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation {
             while (constraintReader.readLine() != null) {
                 lnNum++;
             }
-            constraints = new ParameterConstraintTransform[lnNum];
+            constraints = new ParameterConstraintTransformSineCurve[lnNum];
             lnNum = 0;
             BufferedReader constraintReader2 = new BufferedReader(new FileReader(costrainFile));
 
             while ((line = constraintReader2.readLine()) != null) {
                 String[] ent = line.split(",");
-                constraints[lnNum] = new ParameterConstraintTransform(new double[]{
+                constraints[lnNum] = new ParameterConstraintTransformSineCurve(new double[]{
                     Double.parseDouble(ent[0]), Double.parseDouble(ent[1])});
                 lnNum++;
             }
         }
+        //< /editor-fold>    
         //< /editor-fold>    
 
         if (randSel) {
