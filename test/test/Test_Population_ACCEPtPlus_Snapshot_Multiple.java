@@ -20,15 +20,15 @@ import util.FileZipper;
 /**
  * 
  * @author Ben Hui
- * @deprecated if possible use Test_Population_ACCEPtPlus_Simulation_Batch instead
+ * 
  */
 
 public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
 
-    public static final File RESULTS_DIR = new File("C:\\Users\\Bhui\\Desktop\\FTP\\ACCEPt\\MassScr");
+    public static final File RESULTS_DIR = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\GenResults_Intervention");
 
-    public static boolean decodeBase = !true;
-    public static boolean decodePreval = true;
+    public static boolean decodeBase = true;
+    public static boolean decodePreval = !true;
 
     // Result store format:
     // int[fIndex][# total, # infected]

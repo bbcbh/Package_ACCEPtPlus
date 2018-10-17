@@ -1156,6 +1156,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         }
 
         System.out.println("Time required for simulation (s) = " + (System.currentTimeMillis() - ticInf) / 1000f);
+        
+        
+        util.Snapshot_Population_ACCEPtPlus.decodePopZips(testDir.getAbsolutePath());
+        
 
     }
 

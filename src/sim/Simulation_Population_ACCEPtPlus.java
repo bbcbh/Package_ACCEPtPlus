@@ -129,10 +129,14 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
             }
             run.batchRun();
+            
+            
 
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace(System.err);
         }
+        
+        
 
     }
 
@@ -163,18 +167,6 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
             sim.setBaseDir(dir);
             sim.loadProperties(prop);
             sim.generateOneResultSet();
-
-            File[] singleResultSet = dir.listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.isDirectory();
-                }
-            });
-
-            for (File f : singleResultSet) {
-                Snapshot_Population_ACCEPtPlus.decodePopZips(new String[]{f.getAbsolutePath()});
-
-            }
 
         }
     }
