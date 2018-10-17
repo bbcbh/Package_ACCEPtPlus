@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import person.AbstractIndividualInterface;
 import person.Person_ACCEPtPlusSingleInflection;
-import random.MersenneTwisterFastRandomGenerator;
+import random.MersenneTwisterRandomGenerator;
 import random.RandomGenerator;
 import relationship.RelationshipMap;
 import relationship.SingleRelationship;
@@ -24,6 +24,18 @@ import util.Classifier_ACCEPt;
 import util.FileZipper;
 import util.PersonClassifier;
 
+/**
+ *
+ * @author Ben Hui
+ * @version 20181017
+ *
+ * <pre>
+ * History
+ *
+ * 201581017 - Alterate implmentation of preval store
+ *
+ * </pre>
+ */
 public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Population_ACCEPtPlus {
 
     public static final PersonClassifier ACCEPT_CLASSIFIER = new Classifier_ACCEPt();
@@ -233,7 +245,7 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
         int[] exportAt = (int[]) runnableParam[RUNNABLE_EXPORT_AT];
         File[] exportPath = (File[]) runnableParam[RUNNABLE_EXPORT_PATH];
         int exportPt = 0;
-        RandomGenerator testRNG = new MersenneTwisterFastRandomGenerator(population.getSeed());
+        RandomGenerator testRNG = new MersenneTwisterRandomGenerator(population.getSeed());
 
         // Annual test
         PersonClassifier TEST_CLASSIFIER = (PersonClassifier) runnableParam[RUNNABLE_INFECTION_TESTING_CLASSIFIER];
@@ -284,12 +296,15 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
 
         }
 
+        ArrayList<int[]> prevalStoreArr = null;
+
         if (prevalStoreFreq > 0) {
+            prevalStoreArr = new ArrayList<>();
             File zipStore = new File(prevalStorePath.getParentFile(), prevalStorePath.getName() + ".zip");
             if (zipStore.exists()) {
                 if (population.getGlobalTime() == offset) {
                     outputPrintStream.println(population.getGlobalTime()
-                            + ": Removing old preval store at " + zipStore.getAbsolutePath());                   
+                            + ": Removing old preval store at " + zipStore.getAbsolutePath());
                     zipStore.delete();
                 }
             }
@@ -471,41 +486,18 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
                 }
 
                 // Export prevalence if needed 
-                if (prevalStoreFreq > 0) {
+                if (prevalStoreFreq > 0 && prevalStoreArr != null) {
                     if ((population.getGlobalTime() - offset) % prevalStoreFreq == 0) {
-                        try {
 
-                            File zipStore = new File(prevalStorePath.getParentFile(), prevalStorePath.getName() + ".zip");
-
-                            if (zipStore.exists()) {
-
-                                File tempFile = FileZipper.unzipFile(zipStore, prevalStorePath.getParentFile());
-                                tempFile.renameTo(prevalStorePath);
-                                zipStore.delete();
-
-                            }
-
-                            ObjectOutputStream outStream = AppendableObjOutstream.generateFromFile(prevalStorePath);
-
-                            for (AbstractIndividualInterface person : population.getPop()) {
-                                int[] entry = new int[PREVAL_STORE_TOTAL_LENGTH];
-                                entry[PREVAL_STORE_GLOBAL_TIME] = population.getGlobalTime();
-                                entry[PREVAL_STORE_PERSON_ID] = person.getId();
-                                entry[PREVAL_STORE_GENDER] = person.isMale() ? 0 : 1;
-                                entry[PREVAL_STORE_AGE] = (int) person.getAge();
-                                entry[PREVAL_STORE_NUM_LIFETIME_PARTNERS] = ((Person_ACCEPtPlusSingleInflection) person).getPartnerHistoryLifetimePt();
-                                entry[PREVAL_STORE_INFECT_STATUS] = person.getInfectionStatus()[0];
-                                outStream.writeObject(entry);
-                            }
-
-                            outStream.flush();
-                            outStream.close();
-
-                            FileZipper.zipFile(prevalStorePath, zipStore);
-                            prevalStorePath.delete();
-
-                        } catch (IOException ex) {
-                            ex.printStackTrace(outputPrintStream);
+                        for (AbstractIndividualInterface person : population.getPop()) {
+                            int[] entry = new int[PREVAL_STORE_TOTAL_LENGTH];
+                            entry[PREVAL_STORE_GLOBAL_TIME] = population.getGlobalTime();
+                            entry[PREVAL_STORE_PERSON_ID] = person.getId();
+                            entry[PREVAL_STORE_GENDER] = person.isMale() ? 0 : 1;
+                            entry[PREVAL_STORE_AGE] = (int) person.getAge();
+                            entry[PREVAL_STORE_NUM_LIFETIME_PARTNERS] = ((Person_ACCEPtPlusSingleInflection) person).getPartnerHistoryLifetimePt();
+                            entry[PREVAL_STORE_INFECT_STATUS] = person.getInfectionStatus()[0];
+                            prevalStoreArr.add(entry);
                         }
                     }
                 }
@@ -542,6 +534,24 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
                     outputPrintStream.println(inf_output.toString());
                 }
             }
+        }
+
+        if (prevalStoreArr != null) {
+            try {
+                File zipStore = new File(prevalStorePath.getParentFile(), prevalStorePath.getName() + ".zip");
+                try (ObjectOutputStream outStream = new ObjectOutputStream(new FileOutputStream(prevalStorePath))) {
+                    for (int[] entry : prevalStoreArr) {
+                        outStream.writeObject(entry);
+                    }
+
+                }
+                FileZipper.zipFile(prevalStorePath, zipStore);
+                prevalStorePath.delete();
+
+            } catch (IOException ex) {
+                ex.printStackTrace(outputPrintStream);
+            }
+
         }
 
     }

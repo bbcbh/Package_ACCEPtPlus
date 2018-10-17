@@ -87,8 +87,7 @@ public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
 
                         int[] entry;
 
-                        try {
-
+                        try {                                                                                                                
                             while (true) {
                                 int timeIndex;
                                 entry = (int[]) inStream.readObject();

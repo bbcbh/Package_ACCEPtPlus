@@ -1,4 +1,4 @@
-package test;
+package test.presim;
 
 import java.io.BufferedInputStream;
 import java.io.File;

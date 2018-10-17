@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package test;
+package test.presim;
 
 import java.io.IOException;
 import run.Run_Population_ACCEPtPlus_SA_Generate;
