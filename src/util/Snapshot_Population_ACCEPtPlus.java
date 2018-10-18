@@ -21,6 +21,13 @@ import relationship.SingleRelationship;
 /**
  *
  * @author Ben Hui
+ * @version 20181018
+*  <pre>
+ * History:
+ * 
+ * 20181018 - Pre-order population based on numberic value
+ *
+ * </pre>
  */
 public class Snapshot_Population_ACCEPtPlus {
 
@@ -189,10 +196,20 @@ public class Snapshot_Population_ACCEPtPlus {
         });
 
         Arrays.sort(popFiles, new Comparator<File>() {
-
             @Override
             public int compare(File t, File t1) {
-                return t.getName().compareTo(t1.getName());
+                
+                Matcher m = Pattern_popFile.matcher(t.getName());
+                int it = 0, it1 = 0;
+                
+                if (m.find()) {
+                   it = Integer.parseInt(m.group(1));
+                }
+                m = Pattern_popFile.matcher(t1.getName());
+                if (m.find()) {
+                   it1 = Integer.parseInt(m.group(1));
+                }                                
+                return Integer.compare(it, it1);
             }
         });
 
