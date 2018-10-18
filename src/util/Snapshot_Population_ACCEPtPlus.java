@@ -11,6 +11,8 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import person.AbstractIndividualInterface;
 import person.Person_ACCEPtPlusSingleInflection;
 import population.Population_ACCEPtPlus;
@@ -24,6 +26,8 @@ public class Snapshot_Population_ACCEPtPlus {
 
     public static final String DIR_PATH
             =  "C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\16_Runs\\Baseline";
+    
+    public static final Pattern Pattern_popFile = Pattern.compile("\\w*pop_S(\\d+)_T0.zip");
             
 
     static final PersonClassifier CLASSIFIER_ACCEPT_GENDER_AGE_GRP = new PersonClassifier() {
@@ -213,8 +217,17 @@ public class Snapshot_Population_ACCEPtPlus {
         PrintWriter errWri = new PrintWriter(new File(importDir, "Err.txt"));
         int numErr = 0;
 
-        for (int filePt = 0; filePt < popFiles.length; filePt++) {
-            File popFile = popFiles[filePt];
+        for (File popFile : popFiles) {                                    
+            int filePt;            
+            String zipPopName = popFile.getAbsolutePath();
+            Matcher m = Pattern_popFile.matcher(popFile.getName());
+            if (m.find()) {
+                filePt = Integer.parseInt(m.group(1));
+            }else{
+                filePt = (int) (System.currentTimeMillis() / 1000);
+                System.err.println("Ill-formed population file name " + popFile.getName()
+                        + "\nUse system time of " + Integer.toString(filePt) + "instead.");
+            }                                                                        
             int[] numByACCEPtGenderAge = new int[CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()];
             int[] numVirginByACCEPtGenderAge = new int[CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()];
 
@@ -244,7 +257,7 @@ public class Snapshot_Population_ACCEPtPlus {
 
             int[][] partner_in_12_months_by_age_gender_sum = new int[6][3]; // Age 16-19, Age 20-29, Age 30-39, Age 40-49, Age 50-59, Age 60-69
             int[][] partner_in_12_months_by_age_gender_counter = new int[partner_in_12_months_by_age_gender_sum.length][3];
-
+            
             int[] num_indiv = new int[6]; // M 16-19, 20-24, 25-29 
             int[] num_infected = new int[num_indiv.length];
 
@@ -560,9 +573,8 @@ public class Snapshot_Population_ACCEPtPlus {
             outputWri[OUTPUT_NUM_PARTNER_LAST_YEAR_BY_AGE_MALE].println();
             outputWri[OUTPUT_NUM_PARTNER_LAST_YEAR_BY_AGE_FEMALE].println();
 
-            System.out.println("Analysis for " + popFiles[filePt].getAbsolutePath() + " done");
-            //System.out.println("Number of partnership " + pop.getRelMap()[0].edgeSet().size());
-            //System.out.println("Next Inf Long = " + pop.getInfList()[0].getRNG().nextLong());
+           System.out.println("Analysis for "+ zipPopName + " done");
+       
 
             // OUTPUT_PERCENT_VIRGIN
             outputWri[OUTPUT_PERCENT_VIRGIN].print(filePt);
@@ -580,11 +592,11 @@ public class Snapshot_Population_ACCEPtPlus {
                 Iterator<SingleRelationship> edges = relMap[r].edgeSet().iterator();
 
                 while (edges.hasNext()) {
-                    SingleRelationship rel = edges.next();                    
+                    SingleRelationship rel = edges.next();
                     AbstractIndividualInterface[] partners =  rel.getLinks(pop.getLocalDataMap());                    
                     double maleAge =  partners[0].isMale()? partners[0].getAge() :  partners[1].getAge();
-                    double femaleAge =  partners[0].isMale()? partners[1].getAge() :  partners[0].getAge();                                                           
-
+                    double femaleAge =  partners[0].isMale()? partners[1].getAge() :  partners[0].getAge();
+                    
                     outputWri[OUTPUT_PARTNERSHIP_AGE_DIFF].print(filePt);
                     outputWri[OUTPUT_PARTNERSHIP_AGE_DIFF].print(',');
                     outputWri[OUTPUT_PARTNERSHIP_AGE_DIFF].print(maleAge - femaleAge);

@@ -40,13 +40,14 @@ import util.PersonClassifier;
 /**
  *
  * @author Ben
- * @version 20180626
+ * @version 20181018
  *
  * <pre>
  * History:
  *
  * 20180626 - Add parameter input for BEST_FIT_DUR_SD_MALE and BEST_FIT_DUR_SD_FEMALE
  * 20181011 - Add support for simulation run time
+ * 20181018 - Add suport for pop selection
  *
  * </pre>
  */
@@ -62,6 +63,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
     public File BATCH_BASE_PATH = new File("../ACCEPtPlusDirVM/1000_Runs");
     public int SKIP_DATA = 0;
+
+    private Integer[] popSelction = null;
 
     public double[] BEST_FIT_PARAMETER = new double[]{
         0,
@@ -249,6 +252,14 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // INDEX_STORE_PREVAL_FREQ
         null,};
 
+    public Integer[] getPopSelction() {
+        return popSelction;
+    }
+
+    public void setPopSelction(Integer[] popSelction) {
+        this.popSelction = popSelction;
+    }
+
     public static void main(String[] arg) throws IOException, ClassNotFoundException, InterruptedException {
         Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(arg);
         run.batchRun();
@@ -349,9 +360,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
-                    
-            };
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -373,8 +382,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY],
                 new float[]{0.5f, 0.25f, 0.0f},
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
-            };
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -397,8 +405,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY],
                 new float[]{0f, 0f, 0f},
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
-            };
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -417,8 +424,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
-            };
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -439,8 +445,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 0.5f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
-            };
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -461,8 +466,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 0.8f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
-            };
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -481,8 +485,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 0.8f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],
-            };
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
 
             tic = System.currentTimeMillis();
             System.out.println("Generating data for " + targetDir.getAbsolutePath());
@@ -1109,6 +1112,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         if (NUM_SIM_TOTAL == 0) { // For deduging
             return;
         }
+        
+        if(popSelction != null){
+            System.out.println("Number of population selected = " + popSelction.length);            
+        }
+        
 
         long ticInf = System.currentTimeMillis();
 
@@ -1123,9 +1131,12 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             File existPop = new File(testDir, "pop_S" + s + "_T0.zip");
 
             if (existPop.exists()) {
-                System.out.println("Result population, " + existPop.getAbsolutePath() + " already exist. Simulation NOT Run");
+                //System.out.println("Result population, " + existPop.getAbsolutePath() + " already exist. Simulation NOT Run");
+            } else if(popSelction != null && Arrays.binarySearch(popSelction, s) <0 ){
+                //System.out.println("Pop file " + popFile.getName() + " is not incldued in popSelection. Simulation NOT Run");
             } else {
-
+                System.out.println("Simulation using pop file " + popFile.getName());
+                
                 if (!useParallel) {
                     runnable.run();
                 } else {
@@ -1156,10 +1167,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         }
 
         System.out.println("Time required for simulation (s) = " + (System.currentTimeMillis() - ticInf) / 1000f);
-        
-        
+
         util.Snapshot_Population_ACCEPtPlus.decodePopZips(testDir.getAbsolutePath());
-        
 
     }
 

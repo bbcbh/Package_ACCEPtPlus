@@ -25,7 +25,7 @@ import util.FileZipper;
 
 public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
 
-    public static final File RESULTS_DIR = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\GenResults_Intervention");
+    public static final File RESULTS_DIR = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\TestDir");
 
     public static boolean decodeBase = true;
     public static boolean decodePreval = !true;

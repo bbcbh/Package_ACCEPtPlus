@@ -1,10 +1,13 @@
 package sim;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Properties;
 import run.Run_Population_ACCEPtPlus_InfectionIntro_Batch;
@@ -12,7 +15,6 @@ import static sim.SimulationInterface.PROP_CLASS;
 import static sim.SimulationInterface.PROP_NAME;
 import util.PersonClassifier;
 import util.PropValUtils;
-import util.Snapshot_Population_ACCEPtPlus;
 
 /**
  *
@@ -117,7 +119,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
         rArg[3] = propVal[PROP_SKIP_DATA_SET] == null ? "" : ((Integer) propVal[PROP_SKIP_DATA_SET]).toString();
         rArg[4] = propVal[PROP_INTRO_TYPE] == null ? "" : ((Integer) propVal[PROP_INTRO_TYPE]).toString();
         rArg[5] = propVal[PROP_SNAP_FREQ] == null ? "" : ((Integer) propVal[PROP_SNAP_FREQ]).toString();
-        rArg[6] = propVal[PROP_NUM_SNAP] == null? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
+        rArg[6] = propVal[PROP_NUM_SNAP] == null ? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
 
         try {
             Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
@@ -126,17 +128,36 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                     // Best fit parameters
                     run.getParameter()[v] = Double.parseDouble(propModelInitStr[v]);
                 }
+            }
+
+            if (propVal[PROP_POP_SELECT_CSV] != null) {
+                File csv = new File(propVal[PROP_POP_SELECT_CSV].toString());
+                ArrayList<Integer> arr = null;
+                try {
+                    try (BufferedReader lines = new BufferedReader(new FileReader(csv))) {
+                        arr = new ArrayList();
+                        String line;
+                        while ((line = lines.readLine()) != null) {
+                            arr.add(Integer.parseInt(line));
+                        }
+                    }
+                } catch (IOException | NumberFormatException ex) {
+                    ex.printStackTrace(System.err);
+                }
+                if (arr != null) {
+                    Integer[] popSel;
+                    popSel = arr.toArray(new Integer[arr.size()]);
+                    Arrays.sort(popSel);
+                    run.setPopSelction(popSel);
+                }
 
             }
+
             run.batchRun();
-            
-            
 
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace(System.err);
         }
-        
-        
 
     }
 
