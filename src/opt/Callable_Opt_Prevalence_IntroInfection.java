@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package opt;
 
 import availability.AbstractAvailability;
@@ -36,7 +31,6 @@ import util.FileZipper;
 import util.PersonClassifier;
 import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.OPT_PARAM_INTRO_ADJ_FEMALE;
 import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.OPT_PARAM_INTRO_ADJ_MALE;
-import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.TARGET_PREVAL;
 import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_16_19;
 import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_20_24;
 import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_25_29;
@@ -76,19 +70,24 @@ import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.distribution.GammaDistribution;
 import org.apache.commons.math3.exception.NotStrictlyPositiveException;
 import random.MersenneTwisterRandomGenerator;
+import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.TARGET_PREVAL;
 
 /**
  *
  * @author Ben Hui
- * @version 20180619
- * 
+ * @version 20181024
+ *
  * <pre>
  * History
- * 
- * 20180619
+ *
+ * 20180619:
  *  - Remove reference to deprecated RNG
- *  - Change parameter to fit under 8 parameters setting 
- * 
+ *  - Change parameter to fit under 8 parameters setting
+ *
+ * 20181024:
+ *  - Add OPT_TARGET_PREVAL_SEL option
+ *
+ *
  * </pre>
  */
 public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]> {
@@ -150,15 +149,19 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
         // Transmission SD        
         0,
         0,
-    
-    };
+        // Duration SD
+        7,
+        7,};
 
     final PersonClassifier classifier = new Classifier_ACCEPt();
+    private final boolean[] OPT_TARGET_PREVAL_SEL;
     float[] diffInPreval = null;
 
     protected int[] exportPopAt = null; //new int[]{startTime + (numYrToRun) * AbstractIndividualInterface.ONE_YEAR_INT} if null
     protected File[] exportPopPath = null; // new File[]{optRunDir} if null
     private boolean usingAgeSpec = false;
+
+    private StringBuilder preOptStr = new StringBuilder();
 
     public float[] getDiffInPreval() {
         return diffInPreval;
@@ -170,30 +173,41 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
     }
 
     public Callable_Opt_Prevalence_IntroInfection(int optRunId, int simId, long timestamp,
-            File optBaseDir, File importDir, double[] param) {
+            File optBaseDir, File importDir,
+            double[] PRE_OPT_PARAM,
+            boolean[] OPT_TARGET_PREVAL_SEL,
+            double[] param) {
+
         this.optRunId = optRunId;
         this.simId = simId;
         this.importDir = importDir;
         popFile = new File(importDir, "pop_S" + simId + "_T0.zip");
         optRunDir = new File(optBaseDir, Long.toString(timestamp));
+        this.OPT_TARGET_PREVAL_SEL = OPT_TARGET_PREVAL_SEL;
 
-        //System.out.println(this.getClass().getName() + ": # Parameters = " + param.length);
+        // Setting pre-opt parameter 
+        for (int i = 0; i < PRE_OPT_PARAM.length; i++) {
+            if (!Double.isNaN(PRE_OPT_PARAM[i])) {
+                this.param[i] = PRE_OPT_PARAM[i];
+            }
+        }
 
+        preOptStr.append(this.getClass().getName()).append(": # Parameters = ").append(param.length);
         if (param.length == this.param.length) {
-            //System.out.println(this.getClass().getName() + "Parameter to optimise = All");
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = All");
             System.arraycopy(param, 0, this.param, 0, param.length);
         } else if (param.length == 1) {
-            //System.out.println(this.getClass().getName() + "Parameter to optimise = Mixing only");
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = Mixing only");
             this.param[OPT_PARAM_MIX_RANDOM] = param[0];
         } else if (param.length == 5) {
-            //System.out.println(this.getClass().getName() + "Parameter to optimise = Mixing, tranmission and duration");
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = Mixing, tranmission and duration");
             this.param[OPT_PARAM_MIX_RANDOM] = param[0];
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[1];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[2];
             this.param[OPT_PARAM_AVE_INF_DUR_FEMALE] = param[3];
             this.param[OPT_PARAM_AVE_INF_DUR_MALE] = param[4];
-        } else if (param.length == 10){                       
-            //System.out.println(this.getClass().getName() + "Parameter to optimise = Tranmission and duration and gender weight for <30");           
+        } else if (param.length == 10) {
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = Tranmission and duration and gender weight for <30");
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
             this.param[OPT_PARAM_AVE_INF_DUR_FEMALE] = param[2];
@@ -203,19 +217,20 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
             this.param[OPT_PARAM_GENDER_WEIGHT_25_29_F] = param[6];
             this.param[OPT_PARAM_GENDER_WEIGHT_16_19_M] = param[7];
             this.param[OPT_PARAM_GENDER_WEIGHT_20_24_M] = param[8];
-            this.param[OPT_PARAM_GENDER_WEIGHT_25_29_M] = param[9];                                                           
-        } else if (param.length == 8) {            
+            this.param[OPT_PARAM_GENDER_WEIGHT_25_29_M] = param[9];
+        } else if (param.length == 8) {
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = tranmission and  gender weight for <30");
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[0];
-            this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[1];  
+            this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[1];
             this.param[OPT_PARAM_GENDER_WEIGHT_16_19_M] = param[2];
             this.param[OPT_PARAM_GENDER_WEIGHT_20_24_M] = param[3];
             this.param[OPT_PARAM_GENDER_WEIGHT_25_29_M] = param[4];
             this.param[OPT_PARAM_GENDER_WEIGHT_16_19_F] = param[5];
             this.param[OPT_PARAM_GENDER_WEIGHT_20_24_F] = param[6];
-            this.param[OPT_PARAM_GENDER_WEIGHT_25_29_F] = param[7];            
+            this.param[OPT_PARAM_GENDER_WEIGHT_25_29_F] = param[7];
         } else if (param.length == 16) {
             this.usingAgeSpec = true;
-            //System.out.println(this.getClass().getName() + "Parameter to optimise = Age specific tranmission and duration");
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = Age specific tranmission and duration");
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
             this.param[OPT_PARAM_TRAN_PROB_TO_16_19_M] = param[2];
@@ -232,13 +247,14 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
             this.param[OPT_PARAM_INF_DUR_16_19_M] = param[13];
             this.param[OPT_PARAM_INF_DUR_20_24_M] = param[14];
             this.param[OPT_PARAM_INF_DUR_25_29_M] = param[15];
-        } else if (param.length == 4){
-            //System.out.println(this.getClass().getName() + "Parameter to optimise = tranmission and variance");
+        } else if (param.length == 4) {
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = tranmission and variance");
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE_SD] = param[2];
-            this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_SD] = param[3];             
-        } else if (param.length == 2){ 
+            this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_SD] = param[3];
+        } else if (param.length == 2) {
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = tranmission only");
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
         } else {
@@ -465,37 +481,37 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
                     trans[1] = param[OPT_PARAM_TRAN_FEMALE_TO_MALE];
                     trans[0] = param[OPT_PARAM_TRAN_FEMALE_TO_MALE] + param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA];
                 }
-                
-                if(param[OPT_PARAM_TRAN_FEMALE_TO_MALE_SD] > 0 || param[OPT_PARAM_TRAN_MALE_TO_FEMALE_SD] > 0){
+
+                if (param[OPT_PARAM_TRAN_FEMALE_TO_MALE_SD] > 0 || param[OPT_PARAM_TRAN_MALE_TO_FEMALE_SD] > 0) {
                     RandomGenerator popRNG = pop.getInfList()[0].getRNG();
                     double[] betaParam;
                     BetaDistribution beta;
-                    
-                    if(param[OPT_PARAM_TRAN_FEMALE_TO_MALE_SD] > 0){
-                        betaParam = generatedBetaParam(new double[]{param[OPT_PARAM_TRAN_FEMALE_TO_MALE], 
+
+                    if (param[OPT_PARAM_TRAN_FEMALE_TO_MALE_SD] > 0) {
+                        betaParam = generatedBetaParam(new double[]{param[OPT_PARAM_TRAN_FEMALE_TO_MALE],
                             param[OPT_PARAM_TRAN_FEMALE_TO_MALE_SD]});
                         textOutput.println("Tranmission FM sample from Beta " + Arrays.toString(betaParam)
                                 + " Mean = " + (betaParam[0] / (betaParam[0] + betaParam[1]))
-                                + " sd = "                                
+                                + " sd = "
                                 + Math.sqrt((betaParam[0] * betaParam[1])
                                         / (Math.pow(betaParam[0] + betaParam[1], 2) * (betaParam[0] + betaParam[1] + 1))));
                         beta = new BetaDistribution(popRNG, betaParam[0], betaParam[1]);
-                        trans[1] = beta.sample();                                                                                                
+                        trans[1] = beta.sample();
                     }
-                    
-                     if(param[OPT_PARAM_TRAN_MALE_TO_FEMALE_SD] > 0){
+
+                    if (param[OPT_PARAM_TRAN_MALE_TO_FEMALE_SD] > 0) {
                         betaParam = generatedBetaParam(new double[]{
-                            param[OPT_PARAM_TRAN_FEMALE_TO_MALE] + param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA], 
+                            param[OPT_PARAM_TRAN_FEMALE_TO_MALE] + param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA],
                             param[OPT_PARAM_TRAN_MALE_TO_FEMALE_SD]});
                         textOutput.println("Tranmission MF sample from Beta " + Arrays.toString(betaParam)
                                 + " Mean = " + (betaParam[0] / (betaParam[0] + betaParam[1]))
-                                + " sd = "                                
+                                + " sd = "
                                 + Math.sqrt((betaParam[0] * betaParam[1])
                                         / (Math.pow(betaParam[0] + betaParam[1], 2) * (betaParam[0] + betaParam[1] + 1))));
                         beta = new BetaDistribution(popRNG, betaParam[0], betaParam[1]);
-                        trans[0] = beta.sample();                                                                                                
-                    }                                                          
-                }                                
+                        trans[0] = beta.sample();
+                    }
+                }
                 key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_MF_INDEX);
                 ct_inf.setParameter(key, new double[]{trans[0], 0});
 
@@ -621,6 +637,18 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
                 diffInPreval = new float[TARGET_PREVAL.length];
                 for (int i = 0; i < diffInPreval.length; i++) {
                     diffInPreval[i] = (inf[i] / num[i]) - TARGET_PREVAL[i];
+                }
+
+                if (OPT_TARGET_PREVAL_SEL != null) {
+                    int selPt = 0;
+                    float[] diffInPrevalSel = new float[diffInPreval.length];
+                    for (int i = 0; i < diffInPrevalSel.length; i++) {
+                        if (OPT_TARGET_PREVAL_SEL[i]) {
+                            diffInPrevalSel[selPt] = diffInPreval[i];
+                            selPt++;
+                        }
+                    }
+                    diffInPreval = Arrays.copyOf(diffInPrevalSel, selPt);
                 }
 
             }

@@ -18,7 +18,6 @@ import relationship.SingleRelationship;
 import static sim.Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_AT;
 import static sim.Runnable_Population_ACCEPtPlus.RUNNABLE_EXPORT_PATH;
 import static sim.Runnable_Population_ACCEPtPlus.RUNNABLE_SIM_DURATION;
-import util.AppendableObjOutstream;
 import util.ArrayUtilsRandomGenerator;
 import util.Classifier_ACCEPt;
 import util.FileZipper;
@@ -504,7 +503,7 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
 
                 if (population.getGlobalTime() % 30 == 0) {
 
-                    int[] total = new int[ACCEPT_CLASSIFIER.numClass()]; // 16-17, 18-20, 21-24, 25-29 
+                    int[] total = new int[ACCEPT_CLASSIFIER.numClass()]; // 16-19, 20-24, 25-29 
                     int[] infect = new int[ACCEPT_CLASSIFIER.numClass()];
 
                     for (AbstractIndividualInterface p : population.getPop()) {

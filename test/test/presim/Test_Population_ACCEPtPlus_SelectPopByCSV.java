@@ -18,7 +18,7 @@ public class Test_Population_ACCEPtPlus_SelectPopByCSV {
 
     public static void main(String[] arg) throws IOException, ClassNotFoundException, InterruptedException {
 
-        File propDir = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\GenResults_Intervention");
+        File propDir = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\TestDir");
         File csvFile = new File(propDir, "ACCEPt_Select_100.csv");
         
         String[] prefix = new String[]{"output_sim_","pop_S","testing_history_"};

@@ -54,7 +54,7 @@ import util.PersonClassifier;
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
     public static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
-    public static final PersonClassifier ACCEPT_CLASSIFIER = new Classifier_ACCEPt();
+    //public static final PersonClassifier ACCEPT_CLASSIFIER = new Classifier_ACCEPt();
     public static final long BASE_SEED = 2251912970037127827l;
 
     public int NUM_SIM_TOTAL = 1000;
@@ -977,7 +977,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         testDir.mkdirs(); // Create directory if not exists
         File importDir = new File(IMPORT_PATH);
 
-        MersenneTwister rng = new MersenneTwister(BASE_SEED);
+        
 
         File[] existedPop = importDir.exists() ? importDir.listFiles(new FileFilter() {
             @Override
@@ -992,6 +992,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
         // Generate new population
         if (!importingPopExist) {
+            MersenneTwister rng = new MersenneTwister(BASE_SEED);
             importDir.mkdirs();
 
             String[] existPopName = new String[existedPop.length];
@@ -1343,10 +1344,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                             };
                         } else {
                             introClassifier = new Classifier_ACCEPt();
-
-                            prevalByClass = new float[]{0.046f, 0.071f, 0.054f, 0.037f, 0.090f, 0.081f, 0.038f, 0.013f};
-                            //opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.TARGET_PREVAL 
-                            //= new float[]{0.046f, 0.071f, 0.054f, 0.037f, 0.090f, 0.081f, 0.038f, 0.013f};
+                            prevalByClass = opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.TARGET_PREVAL;                            
                         }
 
                         sim.getPopulation().setInstantInfection(0, introClassifier, prevalByClass, 296);
@@ -1628,6 +1626,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         sim.setPrevalStoreFreq(prevalenceStoreFreq, prevalStorePath);
                         textOutput.println("Prevalence stored at " + prevalStorePath.getAbsolutePath() + " with frequency of " + prevalenceStoreFreq);
                     }
+                    
+                    textOutput.println("First rng = " + sim.getPopulation().getRNG().nextInt());
 
                     sim.run();
                     textOutput.close();

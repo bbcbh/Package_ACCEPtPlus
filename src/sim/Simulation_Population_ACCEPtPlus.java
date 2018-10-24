@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Properties;
+import opt.Abstract_Population_ACCEPtPlus_IntroInfection_Optimisation;
+import opt.OptRun_Population_ACCEPtPlus_IntroInfection_GA_Optimisation;
+import opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation;
 import run.Run_Population_ACCEPtPlus_InfectionIntro_Batch;
 import static sim.SimulationInterface.PROP_CLASS;
 import static sim.SimulationInterface.PROP_NAME;
@@ -19,20 +22,24 @@ import util.PropValUtils;
 /**
  *
  * @author Ben Hui
- * @version 20181011
+ * @version 20181024
+ *
+ *
+ *
  */
 public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
     public static final String[] PROP_NAME_ACCEPT = {
-        "PROP_SKIP_DATA_SET", // Binary number indic to skip which scenario. eg. 524286 - Baseline only,   5116 - ACCEPt Manscript              
-        "PROP_INTRO_TYPE"
+        "PROP_SKIP_DATA_SET", // For simulation batch: Binary number indices to skip which scenario, For optimistion - Binary number indices for targetPrevalSel
+        "PROP_INTRO_TYPE",
+        "PROP_ACCEPT_SIM_TYPE", // 0 = simulation batch (default), 1 = optimistion (NM) 2 = optimisation (GA) 
     };
     public static final Class[] PROP_CLASS_ACCEPT = {
-        Integer.class, Integer.class
-    };
+        Integer.class, Integer.class, Integer.class,};
 
     public static final int PROP_SKIP_DATA_SET = PROP_NAME.length;
     public static final int PROP_INTRO_TYPE = PROP_SKIP_DATA_SET + 1;
+    public static final int PROP_ACCEPT_SIM_TYPE = PROP_INTRO_TYPE + 1;
 
     public static final String POP_PROP_INIT_PREFIX = "POP_PROP_INIT_PREFIX_";
     protected String[] propModelInitStr = null;
@@ -111,52 +118,114 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
     @Override
     public void generateOneResultSet() throws IOException, InterruptedException {
         String[] rArg;
+        int simType = propVal[PROP_ACCEPT_SIM_TYPE] == null ? 0 : ((Integer) propVal[PROP_ACCEPT_SIM_TYPE]);
 
-        rArg = new String[7];
-        rArg[0] = baseDir.getAbsolutePath();
-        rArg[1] = propVal[PROP_POP_IMPORT_PATH] == null ? "" : (String) propVal[PROP_POP_IMPORT_PATH];
-        rArg[2] = propVal[PROP_NUM_SIM_PER_SET] == null ? "" : ((Integer) propVal[PROP_NUM_SIM_PER_SET]).toString();
-        rArg[3] = propVal[PROP_SKIP_DATA_SET] == null ? "" : ((Integer) propVal[PROP_SKIP_DATA_SET]).toString();
-        rArg[4] = propVal[PROP_INTRO_TYPE] == null ? "" : ((Integer) propVal[PROP_INTRO_TYPE]).toString();
-        rArg[5] = propVal[PROP_SNAP_FREQ] == null ? "" : ((Integer) propVal[PROP_SNAP_FREQ]).toString();
-        rArg[6] = propVal[PROP_NUM_SNAP] == null ? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
+        switch (simType) {
 
-        try {
-            Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
-            for (int v = 0; v < propModelInitStr.length; v++) {
-                if (propModelInitStr[v] != null) {
-                    // Best fit parameters
-                    run.getParameter()[v] = Double.parseDouble(propModelInitStr[v]);
+            case 1:
+            case 2:
+                Abstract_Population_ACCEPtPlus_IntroInfection_Optimisation runOpt;
+                if (simType == 2) {
+                    rArg = new String[7];
+                    rArg[0] = baseDir.getAbsolutePath();
+                    rArg[1] = propVal[PROP_POP_IMPORT_PATH] == null ? "" : (String) propVal[PROP_POP_IMPORT_PATH];
+                    rArg[2] = Integer.toString(Runtime.getRuntime().availableProcessors());
+                    rArg[3] = propVal[PROP_NUM_SIM_PER_SET] == null ? "" : ((Integer) propVal[PROP_NUM_SIM_PER_SET]).toString();
+                    rArg[4] = propVal[PROP_POP_SELECT_CSV] == null ? "" : propVal[PROP_POP_SELECT_CSV].toString();
+                    rArg[5] = "0";
+                    rArg[6] = "500";
+                    runOpt = new OptRun_Population_ACCEPtPlus_IntroInfection_GA_Optimisation(rArg);
+
+                } else {
+                    rArg = new String[6];
+                    rArg[0] = baseDir.getAbsolutePath();
+                    rArg[1] = propVal[PROP_POP_IMPORT_PATH] == null ? "" : (String) propVal[PROP_POP_IMPORT_PATH];
+                    rArg[2] = Integer.toString(Runtime.getRuntime().availableProcessors());
+                    rArg[3] = propVal[PROP_NUM_SIM_PER_SET] == null ? "" : ((Integer) propVal[PROP_NUM_SIM_PER_SET]).toString();
+                    rArg[4] = propVal[PROP_POP_SELECT_CSV] == null ? "" : propVal[PROP_POP_SELECT_CSV].toString();
+                    rArg[5] = "0";
+                    runOpt = new OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation(rArg);
                 }
-            }
 
-            if (propVal[PROP_POP_SELECT_CSV] != null) {
-                File csv = new File(propVal[PROP_POP_SELECT_CSV].toString());
-                ArrayList<Integer> arr = null;
+                double[] preOptParam = new double[propModelInitStr.length];
+                for (int v = 0; v < propModelInitStr.length; v++) {
+                    if (propModelInitStr[v] != null) {
+                        // Best fit parameters
+                        preOptParam[v] = Double.parseDouble(propModelInitStr[v]);
+                    } else {
+                        preOptParam[v] = Double.NaN;
+                    }
+                }
+                runOpt.setPreOptParameter(preOptParam);
+
+                if (propVal[PROP_SKIP_DATA_SET] != null) {
+                    int indices = (Integer) propVal[PROP_SKIP_DATA_SET];
+                    boolean[] tarPrevalSel = runOpt.getTargetPrevalSel();
+                    for (int i = 0; i < tarPrevalSel.length; i++) {
+                        tarPrevalSel[i] = (indices & 1 << (tarPrevalSel.length - i)) != 0;
+                    }
+                    runOpt.setTargetPrevalSel(tarPrevalSel);
+
+                }
+
+                 {
+                    try {
+                        runOpt.runOptimisation();
+                    } catch (ClassNotFoundException ex) {
+                        ex.printStackTrace(System.err);
+                    }
+                }
+
+                break;
+
+            default:
+
+                rArg = new String[7];
+                rArg[0] = baseDir.getAbsolutePath();
+                rArg[1] = propVal[PROP_POP_IMPORT_PATH] == null ? "" : (String) propVal[PROP_POP_IMPORT_PATH];
+                rArg[2] = propVal[PROP_NUM_SIM_PER_SET] == null ? "" : ((Integer) propVal[PROP_NUM_SIM_PER_SET]).toString();
+                rArg[3] = propVal[PROP_SKIP_DATA_SET] == null ? "" : ((Integer) propVal[PROP_SKIP_DATA_SET]).toString();
+                rArg[4] = propVal[PROP_INTRO_TYPE] == null ? "" : ((Integer) propVal[PROP_INTRO_TYPE]).toString();
+                rArg[5] = propVal[PROP_SNAP_FREQ] == null ? "" : ((Integer) propVal[PROP_SNAP_FREQ]).toString();
+                rArg[6] = propVal[PROP_NUM_SNAP] == null ? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
+
                 try {
-                    try (BufferedReader lines = new BufferedReader(new FileReader(csv))) {
-                        arr = new ArrayList();
-                        String line;
-                        while ((line = lines.readLine()) != null) {
-                            arr.add(Integer.parseInt(line));
+                    Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
+                    for (int v = 0; v < propModelInitStr.length; v++) {
+                        if (propModelInitStr[v] != null) {
+                            // Best fit parameters
+                            run.getParameter()[v] = Double.parseDouble(propModelInitStr[v]);
                         }
                     }
-                } catch (IOException | NumberFormatException ex) {
+
+                    if (propVal[PROP_POP_SELECT_CSV] != null) {
+                        File csv = new File(propVal[PROP_POP_SELECT_CSV].toString());
+                        ArrayList<Integer> arr = null;
+                        try {
+                            try (BufferedReader lines = new BufferedReader(new FileReader(csv))) {
+                                arr = new ArrayList();
+                                String line;
+                                while ((line = lines.readLine()) != null) {
+                                    arr.add(Integer.parseInt(line));
+                                }
+                            }
+                        } catch (IOException | NumberFormatException ex) {
+                            ex.printStackTrace(System.err);
+                        }
+                        if (arr != null) {
+                            Integer[] popSel;
+                            popSel = arr.toArray(new Integer[arr.size()]);
+                            Arrays.sort(popSel);
+                            run.setPopSelction(popSel);
+                        }
+
+                    }
+
+                    run.batchRun();
+
+                } catch (ClassNotFoundException ex) {
                     ex.printStackTrace(System.err);
                 }
-                if (arr != null) {
-                    Integer[] popSel;
-                    popSel = arr.toArray(new Integer[arr.size()]);
-                    Arrays.sort(popSel);
-                    run.setPopSelction(popSel);
-                }
-
-            }
-
-            run.batchRun();
-
-        } catch (ClassNotFoundException ex) {
-            ex.printStackTrace(System.err);
         }
 
     }

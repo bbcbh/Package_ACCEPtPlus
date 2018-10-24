@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -18,85 +19,19 @@ import random.MersenneTwisterRandomGenerator;
 import random.RandomGenerator;
 
 /**
+ * Perform parameter optimisation using Nelder-Mead Optimisiser
  *
  * @author Ben Hui
+ * @version 20181024
  */
-public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation {
-
-    public static final int OPT_PARAM_INTRO_ADJ_MALE = 0;
-    public static final int OPT_PARAM_INTRO_ADJ_FEMALE = OPT_PARAM_INTRO_ADJ_MALE + 1;
-    public static final int OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA = OPT_PARAM_INTRO_ADJ_FEMALE + 1;
-    public static final int OPT_PARAM_TRAN_FEMALE_TO_MALE = OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA + 1;
-    public static final int OPT_PARAM_AVE_INF_DUR_FEMALE = OPT_PARAM_TRAN_FEMALE_TO_MALE + 1;
-    public static final int OPT_PARAM_AVE_INF_DUR_MALE = OPT_PARAM_AVE_INF_DUR_FEMALE + 1;    
-    public static final int OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_16_19 =  OPT_PARAM_AVE_INF_DUR_MALE +1;
-    public static final int OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_20_24 =  OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_16_19 +1;
-    public static final int OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_25_29 =  OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_20_24 +1;
-    public static final int OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_FEMALE_16_19 =  OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_MALE_25_29 +1;
-    public static final int OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_FEMALE_20_24 =  OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_FEMALE_16_19 +1;
-    public static final int OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_FEMALE_25_29 =  OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_FEMALE_20_24 +1;        
-    public static final int OPT_PARAM_GENDER_WEIGHT_16_19_M = OPT_PARAM_PROPORTION_IN_ACCEPT_BEHAVIOR_FEMALE_25_29 + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_20_24_M = OPT_PARAM_GENDER_WEIGHT_16_19_M + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_25_29_M = OPT_PARAM_GENDER_WEIGHT_20_24_M + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_30_39_M = OPT_PARAM_GENDER_WEIGHT_25_29_M + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_40_49_M = OPT_PARAM_GENDER_WEIGHT_30_39_M + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_50_59_M = OPT_PARAM_GENDER_WEIGHT_40_49_M + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_60_69_M = OPT_PARAM_GENDER_WEIGHT_50_59_M + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_16_19_F = OPT_PARAM_GENDER_WEIGHT_60_69_M + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_20_24_F = OPT_PARAM_GENDER_WEIGHT_16_19_F + 1;    
-    public static final int OPT_PARAM_GENDER_WEIGHT_25_29_F = OPT_PARAM_GENDER_WEIGHT_20_24_F + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_30_39_F = OPT_PARAM_GENDER_WEIGHT_25_29_F + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_40_49_F = OPT_PARAM_GENDER_WEIGHT_30_39_F + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_50_59_F = OPT_PARAM_GENDER_WEIGHT_40_49_F + 1;
-    public static final int OPT_PARAM_GENDER_WEIGHT_60_69_F = OPT_PARAM_GENDER_WEIGHT_50_59_F + 1;
-    public static final int OPT_PARAM_MIX_RANDOM = OPT_PARAM_GENDER_WEIGHT_60_69_F + 1;
-    public static final int OPT_PARAM_TRAN_PROB_TO_16_19_M = OPT_PARAM_MIX_RANDOM + 1;
-    public static final int OPT_PARAM_TRAN_PROB_TO_20_24_M  = OPT_PARAM_TRAN_PROB_TO_16_19_M + 1;
-    public static final int OPT_PARAM_TRAN_PROB_TO_25_29_M  = OPT_PARAM_TRAN_PROB_TO_20_24_M + 1;
-    public static final int OPT_PARAM_TRAN_PROB_TO_16_19_F_EXTRA = OPT_PARAM_TRAN_PROB_TO_25_29_M + 1;
-    public static final int OPT_PARAM_TRAN_PROB_TO_20_24_F_EXTRA  = OPT_PARAM_TRAN_PROB_TO_16_19_F_EXTRA + 1;
-    public static final int OPT_PARAM_TRAN_PROB_TO_25_29_F_EXTRA  = OPT_PARAM_TRAN_PROB_TO_20_24_F_EXTRA + 1;
-    public static final int OPT_PARAM_INF_DUR_16_19_M = OPT_PARAM_TRAN_PROB_TO_25_29_F_EXTRA + 1;
-    public static final int OPT_PARAM_INF_DUR_20_24_M = OPT_PARAM_INF_DUR_16_19_M + 1;
-    public static final int OPT_PARAM_INF_DUR_25_29_M = OPT_PARAM_INF_DUR_20_24_M + 1;
-    public static final int OPT_PARAM_INF_DUR_16_19_F = OPT_PARAM_INF_DUR_25_29_M + 1;
-    public static final int OPT_PARAM_INF_DUR_20_24_F = OPT_PARAM_INF_DUR_16_19_F + 1;
-    public static final int OPT_PARAM_INF_DUR_25_29_F = OPT_PARAM_INF_DUR_20_24_F + 1;
-    public static final int OPT_PARAM_TRAN_FEMALE_TO_MALE_SD = OPT_PARAM_INF_DUR_25_29_F + 1;
-    public static final int OPT_PARAM_TRAN_MALE_TO_FEMALE_SD = OPT_PARAM_TRAN_FEMALE_TO_MALE_SD + 1;
-     
-    
-    
-
-    public static final String FILENAME_POP_SELECT = "pop_select.txt";
-    public static final String FILENAME_PARAM_CONSTRIANTS = "ParamConstriants.csv";
-    public static final String FILENAME_OPT_RESULTS_CSV = "ParamOpt.csv";
-    public static final String FILENAME_OPT_RESULTS_OBJ = "ParamOpt.obj";
-    public static final String FILENAME_OPT_SIMPLEX = "ParamSimplex.obj";
-    public static final String FILENAME_PRE_SIMPLEX_CSV = "Pre_Simplex.csv";
-    public static final String FILENAME_PRE_RESIDUE = "Pre_Residue.csv";
-    public static final String FILENAME_P0 = "Pre_P0.csv";
-
-    // Target Prevalence, from ACCEPt     
-    public final static float[] TARGET_PREVAL = new float[]{0.046f, 0.071f, 0.054f, 0.037f,
-        0.090f, 0.081f, 0.038f, 0.013f};
-
-    String optBaseDir = "Z:\\ACCEPT\\OptRes";
-    String importPath = "Z:\\ACCEPT\\ImportDir";
-    int numThreads = Runtime.getRuntime().availableProcessors();
-    int[] simSelect = new int[64];
-    boolean randSel = true;
-
-    int NUM_OPT_TO_KEEP = 10;
-    private final File[] OPT_RES_DIR_COLLECTION;
-    private final double[] OPT_RES_SUM_SQS;
+public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation extends Abstract_Population_ACCEPtPlus_IntroInfection_Optimisation {
 
     public static void main(String[] arg) throws IOException, ClassNotFoundException {
-        OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation run
-                = new OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation(arg);
+        OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation run = new OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation(arg);
         run.runOptimisation();
     }
 
+// Target Prevalence, from ACCEPt
     public OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation(String[] arg) {
         if (arg.length > 0) {
             if (!arg[0].isEmpty()) {
@@ -115,12 +50,12 @@ public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation {
         }
         if (arg.length > 3) {
             if (!arg[3].isEmpty()) {
-                simSelect = new int[Integer.parseInt(arg[3])];
+                popSelectIndex = new int[Integer.parseInt(arg[3])];
             }
         }
         if (arg.length > 4) {
             if (!arg[4].isEmpty()) {
-                randSel = Boolean.parseBoolean(arg[4]);
+                simSelCSVPath = arg[4];
             }
         }
 
@@ -137,11 +72,12 @@ public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation {
         System.out.println("optBaseDir = " + optBaseDir);
         System.out.println("importPath = " + importPath);
         System.out.println("numThreads = " + numThreads);
-        System.out.println("numSimPerStep = " + simSelect.length + (randSel ? " (rand)" : ""));
+        System.out.println("numSimPerStep = " + popSelectIndex.length + (simSelCSVPath.length() == 0 ? " (rand)" : " (From " + simSelCSVPath + ")"));
         System.out.println("numResultToKeep = " + NUM_OPT_TO_KEEP);
 
     }
 
+    @Override
     public void runOptimisation() throws IOException, ClassNotFoundException {
 
         File parentDir = new File(optBaseDir);
@@ -149,59 +85,16 @@ public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation {
 
         ParameterConstraintTransformSineCurve[] constraints;
 
-        //<editor-fold defaultstate="collapsed" desc="Intialise constraints">   
-        File costrainFile = new File(parentDir, FILENAME_PARAM_CONSTRIANTS);
-        try (BufferedReader constraintReader = new BufferedReader(new FileReader(costrainFile))) {
-            int lnNum = 0;
-            String line;
-            while (constraintReader.readLine() != null) {
-                lnNum++;
-            }
-            constraints = new ParameterConstraintTransformSineCurve[lnNum];
-            lnNum = 0;
-            BufferedReader constraintReader2 = new BufferedReader(new FileReader(costrainFile));
-
-            while ((line = constraintReader2.readLine()) != null) {
-                String[] ent = line.split(",");
-                constraints[lnNum] = new ParameterConstraintTransformSineCurve(new double[]{
-                    Double.parseDouble(ent[0]), Double.parseDouble(ent[1])});
-                lnNum++;
-            }
-        }
-        //< /editor-fold>    
-        //< /editor-fold>    
-
-        if (randSel) {
-
-            RandomGenerator rng = new MersenneTwisterRandomGenerator(2251912456367477945l);
-            PrintWriter wri = new PrintWriter(new File(optBaseDir, FILENAME_POP_SELECT));
-            File[] importDir = (new File(importPath)).listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.getName().endsWith(".zip");
-                }
-            });
-
-            int pt = 0;
-            int num = 0;
-
-            while (num < importDir.length && pt < simSelect.length) {
-                if (rng.nextInt(importDir.length - num) < (simSelect.length - pt)) {
-                    simSelect[pt] = num;
-                    wri.println(num);
-                    pt++;
-                }
-                num++;
-            }
-
-            wri.close();
-
-        }
+        constraints = initContraints(parentDir);
+        setPopSelIndex();
 
         AbstractResidualFunc popOptFunc;
 
-        popOptFunc = new Opt_ResFunc_IntroInfection(numThreads, simSelect,
-                optBaseDir, importPath, OPT_RES_DIR_COLLECTION, OPT_RES_SUM_SQS);
+        popOptFunc = new Opt_ResFunc_IntroInfection(numThreads, popSelectIndex,
+                optBaseDir, importPath, 
+                this.getTargetPrevalSel(), 
+                this.getPreOptParameter(),
+                OPT_RES_DIR_COLLECTION, OPT_RES_SUM_SQS);
 
         AbstractParameterOptimiser opt = new NelderMeadOptimiser(popOptFunc);
 
@@ -213,7 +106,7 @@ public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation {
         p0 = new double[]{0.000060147124293455, 0.000119995570730198,
             0.0398023921822977, 0.120858843913148, //(0.16 - 0.12), 0.12,
             432.996452115454, 0.000223571986788022, //0.125,  0.125,  0.125,  0.125,  0.125, 
-        };
+    };
 
         // Default p0, to be replace by imported if necessary
         File preP0 = new File(optBaseDir, FILENAME_P0);
@@ -337,5 +230,6 @@ public class OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation {
         opt.optimise();
 
     }
+
 
 }

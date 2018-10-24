@@ -284,38 +284,7 @@ public class Snapshot_Population_ACCEPtPlus {
             int[] num_indiv_ASHC = new int[8]; // Age 16-19, Age 20-24, Age 25-29, Age 30-34
             int[] num_infected_ASHC = new int[num_indiv_ASHC.length];
 
-            PersonClassifier prevalence_classifier = new PersonClassifier() {
-
-                @Override
-                public int classifyPerson(AbstractIndividualInterface p) {
-                    Person_ACCEPtPlusSingleInflection person = (Person_ACCEPtPlusSingleInflection) p;
-                    if (person.getPartnerHistoryLifetimePt() == 0
-                            || person.getAge() > 30 * AbstractIndividualInterface.ONE_YEAR_INT
-                            || person.getAge() < 16 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                        return -1;
-                    }
-
-                    int index = -1;
-                    if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                        index++;
-                    }
-                    if (p.getAge() >= 20 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                        index++;
-                    }
-                    if (p.getAge() >= 25 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                        index++;
-                    }
-                    if (index != -1) {
-                        index += p.isMale() ? 0 : 3;
-                    }
-                    return index;
-                }
-
-                @Override
-                public int numClass() {
-                    return 6;
-                }
-            };
+            PersonClassifier prevalence_classifier = new Classifier_ACCEPt();
 
             for (AbstractIndividualInterface p : pArr) {
                 Person_ACCEPtPlusSingleInflection person = (Person_ACCEPtPlusSingleInflection) p;
