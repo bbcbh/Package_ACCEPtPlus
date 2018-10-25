@@ -648,7 +648,7 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
                             selPt++;
                         }
                     }
-                    diffInPreval = Arrays.copyOf(diffInPrevalSel, selPt+1);
+                    diffInPreval = Arrays.copyOf(diffInPrevalSel, selPt);
                 }
 
             }

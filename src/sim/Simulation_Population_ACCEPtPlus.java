@@ -22,7 +22,7 @@ import util.PropValUtils;
 /**
  *
  * @author Ben Hui
- * @version 20181024
+ * @version 20181025
  *
  *
  *
@@ -162,7 +162,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                     int indices = (Integer) propVal[PROP_SKIP_DATA_SET];
                     boolean[] tarPrevalSel = runOpt.getTargetPrevalSel();
                     for (int i = 0; i < tarPrevalSel.length; i++) {
-                        tarPrevalSel[i] = (indices & 1 << (tarPrevalSel.length - i)) != 0;
+                        tarPrevalSel[i] = (indices & 1 << ((tarPrevalSel.length -1) - i)) != 0;
                     }
                     runOpt.setTargetPrevalSel(tarPrevalSel);
 
