@@ -36,10 +36,10 @@ public class Opt_ResFunc_IntroInfection extends AbstractResidualFunc {
     private final boolean[] OPT_TARGET_PREVAL_SEL;
     private final double[] PRE_OPT_PARAM;
 
-    public Opt_ResFunc_IntroInfection(int numThreads, int[] simSel,             
+    public Opt_ResFunc_IntroInfection(int numThreads, int[] simSel,
             String basePath,
-            String importPath, 
-            boolean[] OPT_TARGET_PREVAL_SEL, 
+            String importPath,
+            boolean[] OPT_TARGET_PREVAL_SEL,
             double[] PRE_OPT_PARAM,
             File[] OPT_RES_DIR_COLLECTION, double[] OPT_RES_SUM_SQS) {
 
@@ -74,7 +74,16 @@ public class Opt_ResFunc_IntroInfection extends AbstractResidualFunc {
             optOutputDir.mkdirs();
         }
 
-        double[] res = new double[TARGET_PREVAL.length];
+        int resLength = TARGET_PREVAL.length;
+
+        if (OPT_TARGET_PREVAL_SEL != null) {
+            resLength = 0;
+            for (boolean sel : OPT_TARGET_PREVAL_SEL) {
+                resLength += sel ? 1 : 0;
+            }
+        }
+
+        double[] res = new double[resLength];
         final boolean useParallel = numThreads > 1;
 
         ExecutorService executor = null;
@@ -88,12 +97,12 @@ public class Opt_ResFunc_IntroInfection extends AbstractResidualFunc {
             }
 
             Callable_Opt_Prevalence_IntroInfection runnable
-                    = new Callable_Opt_Prevalence_IntroInfection(opt, 
+                    = new Callable_Opt_Prevalence_IntroInfection(opt,
                             simSelect[opt], timestamp,
                             new File(basePath),
-                            new File(importPath), 
+                            new File(importPath),
                             PRE_OPT_PARAM,
-                            OPT_TARGET_PREVAL_SEL,                            
+                            OPT_TARGET_PREVAL_SEL,
                             param);
 
             if (OPT_RES_DIR_COLLECTION.length == 0 || OPT_RES_SUM_SQS.length == 0) {

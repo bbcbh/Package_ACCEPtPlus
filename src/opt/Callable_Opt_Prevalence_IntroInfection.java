@@ -75,7 +75,7 @@ import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.TARGE
 /**
  *
  * @author Ben Hui
- * @version 20181024
+ * @version 20181025
  *
  * <pre>
  * History
@@ -84,7 +84,7 @@ import static opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.TARGE
  *  - Remove reference to deprecated RNG
  *  - Change parameter to fit under 8 parameters setting
  *
- * 20181024:
+ * 20181025:
  *  - Add OPT_TARGET_PREVAL_SEL option
  *
  *
@@ -648,7 +648,7 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
                             selPt++;
                         }
                     }
-                    diffInPreval = Arrays.copyOf(diffInPrevalSel, selPt);
+                    diffInPreval = Arrays.copyOf(diffInPrevalSel, selPt+1);
                 }
 
             }
