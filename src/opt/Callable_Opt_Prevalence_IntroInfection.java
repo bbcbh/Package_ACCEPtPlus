@@ -219,9 +219,9 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
             this.param[OPT_PARAM_GENDER_WEIGHT_20_24_M] = param[8];
             this.param[OPT_PARAM_GENDER_WEIGHT_25_29_M] = param[9];
         } else if (param.length == 8) {
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = tranmission and  gender weight for <30");
-            this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[0];
-            this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[1];
+            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = tranmission and  gender weight for <30");            
+            this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
+            this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
             this.param[OPT_PARAM_GENDER_WEIGHT_16_19_M] = param[2];
             this.param[OPT_PARAM_GENDER_WEIGHT_20_24_M] = param[3];
             this.param[OPT_PARAM_GENDER_WEIGHT_25_29_M] = param[4];
@@ -280,7 +280,7 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
                 optRunDir.mkdirs();
                 textOutput = new PrintStream(new File(optRunDir, "opt_run_" + simId + ".txt"));
             }
-
+            textOutput.println(preOptStr.toString());
             textOutput.println("Continue using pop from " + popFile.getAbsolutePath());
 
             File tempFile = FileZipper.unzipFile(popFile, popFile.getParentFile());
