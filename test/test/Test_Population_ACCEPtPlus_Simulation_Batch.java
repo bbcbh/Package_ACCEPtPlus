@@ -19,9 +19,10 @@ public class Test_Population_ACCEPtPlus_Simulation_Batch {
         
         
         // PROP_SKIP_DATA_SET
-        // 524286 - Baseline only
-        // 524032 - ACCEPt Manscript      
-        // 520446 - Baseline + MassScreen
+        // 4194302- Baseline only
+        // 4194048  - ACCEPt Manscript (with intervention rate)     
+        // 524286  - ACCEPt Manscript (with baseline rate)   
+        // 4190462  - Baseline + MassScreen
 
     }
 

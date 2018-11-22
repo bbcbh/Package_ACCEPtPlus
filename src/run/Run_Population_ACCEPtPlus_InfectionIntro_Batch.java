@@ -40,7 +40,7 @@ import util.PersonClassifier;
 /**
  *
  * @author Ben
- * @version 20181018
+ * @version 20181121
  *
  * <pre>
  * History:
@@ -48,7 +48,7 @@ import util.PersonClassifier;
  * 20180626 - Add parameter input for BEST_FIT_DUR_SD_MALE and BEST_FIT_DUR_SD_FEMALE
  * 20181011 - Add support for simulation run time
  * 20181018 - Add suport for pop selection
- *
+ * 20181121 - Add scenario for PT and retest only
  * </pre>
  */
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
@@ -227,10 +227,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         0.169f,
         //INDEX_RETEST_RATE        
         // Format: float[classId][][]{number of days up to one year,probability}
-        // From email 20171019 TC Summary
+        // 23.6% From email 20171019 TC Summary
+        // 26.3% from Jane's manscript comments
         new float[][][]{
             new float[][]{
-                new float[]{4 * 30}, new float[]{0.236f}
+                new float[]{4 * 30}, new float[]{0.263f} //new float[]{0.236f}
             },},
         //INDEX_PARTNER_TREATMENT_RATE        
         // float or float[]
@@ -420,7 +421,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             inputParam = new Object[]{
                 0.124f, 0.251f,
                 new float[][][]{
-                    new float[][]{new float[]{4 * 30}, new float[]{0.236f * 2}},}, // From email 20171019 TC Summary
+                    new float[][]{new float[]{4 * 30}, 
+                        new float[]{((float[][][]) DEFAULT_RATE[INDEX_RETEST_RATE])[0][2][0] * 2}},}, // From email 20171019 TC Summary
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -481,7 +483,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             inputParam = new Object[]{
                 0.124f, 0.251f,
                 new float[][][]{
-                    new float[][]{new float[]{4 * 30}, new float[]{0.236f * 2}},}, // From email 20171019 TC Summary
+                    new float[][]{new float[]{4 * 30}, 
+                        new float[]{((float[][][]) DEFAULT_RATE[INDEX_RETEST_RATE])[0][2][0] * 2}},}, // From email 20171019 TC Summary
                 0.8f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -968,6 +971,68 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
+        
+        // 19: Double Retesting - background rate
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+            targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_Retesting_Double");
+            inputParam = new Object[]{
+                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                new float[][][]{
+                    new float[][]{new float[]{4 * 30}, 
+                        new float[]{((float[][][]) DEFAULT_RATE[INDEX_RETEST_RATE])[0][2][0] * 2}},}, // From email 20171019 TC Summary
+                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+            tic = System.currentTimeMillis();
+            System.out.println("Generating data for " + targetDir.getAbsolutePath());
+            batchRun.singleRun(targetDir, inputParam);
+            tic = System.currentTimeMillis() - tic;
+            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+        }
+        datasetCount++;
+        // 20: Increase PT rate - 50 ,  baseline rate      
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+            targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_PT_50");
+            inputParam = new Object[]{
+                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                DEFAULT_RATE[INDEX_RETEST_RATE],
+                0.5f,
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+            tic = System.currentTimeMillis();
+            System.out.println("Generating data for " + targetDir.getAbsolutePath());
+            batchRun.singleRun(targetDir, inputParam);
+            tic = System.currentTimeMillis() - tic;
+            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+        }
+        datasetCount++;
+        // 21: Increase PT rate - 50 + retest , baseline rate  
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+            targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_PT_50_Retesting_Double");
+            inputParam = new Object[]{
+                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                new float[][][]{
+                    new float[][]{new float[]{4 * 30}, 
+                        new float[]{((float[][][]) DEFAULT_RATE[INDEX_RETEST_RATE])[0][2][0] * 2}},}, 
+                0.5f,
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+            tic = System.currentTimeMillis();
+            System.out.println("Generating data for " + targetDir.getAbsolutePath());
+            batchRun.singleRun(targetDir, inputParam);
+            tic = System.currentTimeMillis() - tic;
+            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+        }
+        datasetCount++;
+        
+        
+        
     }
 
     public void singleRun(File testDir, Object[] parameters)

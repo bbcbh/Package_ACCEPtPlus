@@ -194,20 +194,20 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
 
         preOptStr.append(this.getClass().getName()).append(": # Parameters = ").append(param.length);
         if (param.length == this.param.length) {
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = All");
+            preOptStr.append(" Parameter to optimise = All");
             System.arraycopy(param, 0, this.param, 0, param.length);
         } else if (param.length == 1) {
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = Mixing only");
+            preOptStr.append(" Parameter to optimise = Mixing only");
             this.param[OPT_PARAM_MIX_RANDOM] = param[0];
         } else if (param.length == 5) {
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = Mixing, tranmission and duration");
+            preOptStr.append(" Parameter to optimise = Mixing, tranmission and duration");
             this.param[OPT_PARAM_MIX_RANDOM] = param[0];
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[1];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[2];
             this.param[OPT_PARAM_AVE_INF_DUR_FEMALE] = param[3];
             this.param[OPT_PARAM_AVE_INF_DUR_MALE] = param[4];
         } else if (param.length == 10) {
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = Tranmission and duration and gender weight for <30");
+            preOptStr.append(" Parameter to optimise = Tranmission and duration and gender weight for <30");
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
             this.param[OPT_PARAM_AVE_INF_DUR_FEMALE] = param[2];
@@ -219,7 +219,7 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
             this.param[OPT_PARAM_GENDER_WEIGHT_20_24_M] = param[8];
             this.param[OPT_PARAM_GENDER_WEIGHT_25_29_M] = param[9];
         } else if (param.length == 8) {
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = tranmission and  gender weight for <30");            
+            preOptStr.append(" Parameter to optimise = tranmission and  gender weight for <30");            
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
             this.param[OPT_PARAM_GENDER_WEIGHT_16_19_M] = param[2];
@@ -230,7 +230,7 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
             this.param[OPT_PARAM_GENDER_WEIGHT_25_29_F] = param[7];
         } else if (param.length == 16) {
             this.usingAgeSpec = true;
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = Age specific tranmission and duration");
+            preOptStr.append(" Parameter to optimise = Age specific tranmission and duration");
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
             this.param[OPT_PARAM_TRAN_PROB_TO_16_19_M] = param[2];
@@ -248,13 +248,13 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
             this.param[OPT_PARAM_INF_DUR_20_24_M] = param[14];
             this.param[OPT_PARAM_INF_DUR_25_29_M] = param[15];
         } else if (param.length == 4) {
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = tranmission and variance");
+            preOptStr.append(" Parameter to optimise = tranmission and variance");
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE_SD] = param[2];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_SD] = param[3];
         } else if (param.length == 2) {
-            preOptStr.append(this.getClass().getName()).append(" Parameter to optimise = tranmission only");
+            preOptStr.append(" Parameter to optimise = tranmission only");
             this.param[OPT_PARAM_TRAN_FEMALE_TO_MALE] = param[0];
             this.param[OPT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA] = param[1];
         } else {
@@ -402,6 +402,9 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
                 sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_CLASSIFIER] = testCoverageClassifier;
                 sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]
                         = new float[]{0.072f, 0.169f};
+                
+                sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_RETEST_RATE] 
+                        =  new float[][][]{new float[][]{ new float[]{4 * 30}, new float[]{0.263f}}}; //26.3 from manuscript commments           
 
                 textOutput.println("Testing coverage = " + Arrays.toString(
                         (float[]) sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]));

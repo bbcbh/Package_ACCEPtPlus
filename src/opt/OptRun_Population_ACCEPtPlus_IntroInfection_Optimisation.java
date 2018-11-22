@@ -2,21 +2,16 @@ package opt;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import optimisation.AbstractParameterOptimiser;
 import optimisation.AbstractResidualFunc;
 import optimisation.NelderMeadOptimiser;
 import transform.ParameterConstraintTransformSineCurve;
-import random.MersenneTwisterRandomGenerator;
-import random.RandomGenerator;
 
 /**
  * Perform parameter optimisation using Nelder-Mead Optimisiser
