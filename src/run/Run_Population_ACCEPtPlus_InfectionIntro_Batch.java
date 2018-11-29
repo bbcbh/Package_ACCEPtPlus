@@ -228,10 +228,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         //INDEX_RETEST_RATE        
         // Format: float[classId][][]{number of days up to one year,probability}
         // 23.6% From email 20171019 TC Summary
-        // 26.3% from Jane's manscript comments
+        // 11.2% for <3 weeks + 12.4%  from manuscript commments 
         new float[][][]{
             new float[][]{
-                new float[]{4 * 30}, new float[]{0.263f} //new float[]{0.236f}
+                new float[]{21, 4 * 30}, new float[]{0.112f, 0.236f}
             },},
         //INDEX_PARTNER_TREATMENT_RATE        
         // float or float[]

@@ -404,7 +404,7 @@ public class Callable_Opt_Prevalence_IntroInfection implements Callable<float[]>
                         = new float[]{0.072f, 0.169f};
                 
                 sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_RETEST_RATE] 
-                        =  new float[][][]{new float[][]{ new float[]{4 * 30}, new float[]{0.263f}}}; //26.3 from manuscript commments           
+                        =  new float[][][]{new float[][]{ new float[]{21, 4 * 30}, new float[]{0.112f, 0.236f} }}; //11.2% for <3% + 12.4%  from manuscript commments           
 
                 textOutput.println("Testing coverage = " + Arrays.toString(
                         (float[]) sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]));
