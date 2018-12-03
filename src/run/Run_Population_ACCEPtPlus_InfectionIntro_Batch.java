@@ -74,8 +74,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // Default
         //0.04, //0.08058424309571056,
         //0.12,
-        0.08,
-        0.06005890880872483,
+        0.04157851274066217,
+        0.11922133832555971,
         //From C:\Users\Bhui\OneDrive - UNSW\ACCEPt\OptResult_AgeSpecTran_GA                
         //0.009054253860880417,
         //0.10005890880872483,
@@ -253,6 +253,38 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // INDEX_STORE_PREVAL_FREQ
         null,};
 
+    public static final Object[] INTERVENTION_RATE = {
+        //INDEX_TEST_RATE_MALE - Meeting note page 40
+        0.124f,
+        //INDEX_TEST_RATE_FEMALE - Meeting note page 40
+        0.251f,
+        // INDEX_RETEST_RATE        
+        // Format: float[classId][][]{number of days up to one year,probability}               
+        // 18.5% for <3 weeks + 9.6% from manuscript commments 
+        new float[][][]{
+            new float[][]{
+                new float[]{21, 4 * 30}, new float[]{0.185f, 0.096f}
+            },},
+        //INDEX_PARTNER_TREATMENT_RATE        
+        // float or float[]
+        // From email 20171019 TC Summary
+        0.3f,
+        //INDEX_TEST_SENSITIVITY
+        // Default = 100%
+        1f,
+        //INDEX_CONT_TEST_30PLUS
+        // Default = 100%
+        new float[]{1f, 1f, 1f},
+        // Optional extra
+        // INDEX_INTRO_INFECTION
+        // 0 = no intro, 1 = initial, 2 = periodic
+        new Integer(1),
+        // INDEX_MASS_SCREENING_SETTING        
+        // Object[]{ PersonClassifier, float[] treatment_rate_by_classIndex, int[][] at_by_classIndex{[at, duration, ...]}   
+        null,
+        // INDEX_STORE_PREVAL_FREQ
+        null,};
+
     public Integer[] getPopSelction() {
         return popSelction;
     }
@@ -335,7 +367,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             targetDir = new File(BATCH_BASE_PATH, "Baseline");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                DEFAULT_RATE[INDEX_RETEST_RATE],
+                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
@@ -347,17 +380,12 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-        // 1: Intervention rate 
-        // Testing rate - Meeting note page 40
-        // Retest and PT rate: From email 20171019 TC Summary
+        // 1: Intervention rate         
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Intervention_rate");
             inputParam = new Object[]{
-                0.124f, 0.251f,
-                new float[][][]{
-                    new float[][]{
-                        new float[]{4 * 30}, new float[]{0.281f}
-                    },},
+                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                INTERVENTION_RATE[INDEX_RETEST_RATE],
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -370,38 +398,12 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-        // 2: 30 Plus testing
+        // 2: No 30 Plus
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_30_Plus_Reduced");
-            inputParam = new Object[]{
-                0.124f, 0.251f,
-                new float[][][]{
-                    new float[][]{
-                        new float[]{4 * 30}, new float[]{0.281f}
-                    },},
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY],
-                new float[]{0.5f, 0.25f, 0.0f},
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 3: No 30 Plus
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-
             targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_30_Plus_No");
             inputParam = new Object[]{
-                0.124f, 0.251f,
-                new float[][][]{
-                    new float[][]{
-                        new float[]{4 * 30}, new float[]{0.281f}
-                    },},
+                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                INTERVENTION_RATE[INDEX_RETEST_RATE],
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY],
                 new float[]{0f, 0f, 0f},
@@ -415,14 +417,36 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-        // 4: Double Retesting
+        // 3: Double Retesting
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double");
             inputParam = new Object[]{
-                0.124f, 0.251f,
+                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
                 new float[][][]{
-                    new float[][]{new float[]{4 * 30}, 
-                        new float[]{((float[][][]) DEFAULT_RATE[INDEX_RETEST_RATE])[0][2][0] * 2}},}, // From email 20171019 TC Summary
+                    new float[][]{
+                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
+                    },},
+                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+            tic = System.currentTimeMillis();
+            System.out.println("Generating data for " + targetDir.getAbsolutePath());
+            batchRun.singleRun(targetDir, inputParam);
+            tic = System.currentTimeMillis() - tic;
+            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+        }
+        datasetCount++;
+        // 4: Double Retesting - 3 weeks plus only
+        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double_3_Wk_Plus_Only");
+            inputParam = new Object[]{
+                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                new float[][][]{
+                    new float[][]{
+                        new float[]{21, 4 * 30}, new float[]{0.185f, 0.096f * 2}
+                    },},
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -439,11 +463,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_PT_50");
             inputParam = new Object[]{
-                0.124f, 0.251f,
-                new float[][][]{
-                    new float[][]{
-                        new float[]{4 * 30}, new float[]{0.281f}
-                    },},
+                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                INTERVENTION_RATE[INDEX_RETEST_RATE],
                 0.5f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -460,11 +481,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_PT_80");
             inputParam = new Object[]{
-                0.124f, 0.251f,
-                new float[][][]{
-                    new float[][]{
-                        new float[]{4 * 30}, new float[]{0.281f}
-                    },},
+                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                INTERVENTION_RATE[INDEX_RETEST_RATE],
                 0.8f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -481,10 +499,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double_PT_80");
             inputParam = new Object[]{
-                0.124f, 0.251f,
+                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
                 new float[][][]{
-                    new float[][]{new float[]{4 * 30}, 
-                        new float[]{((float[][][]) DEFAULT_RATE[INDEX_RETEST_RATE])[0][2][0] * 2}},}, // From email 20171019 TC Summary
+                    new float[][]{
+                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
+                    },},
                 0.8f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -971,15 +990,16 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-        
+
         // 19: Double Retesting - background rate
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
             targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_Retesting_Double");
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 new float[][][]{
-                    new float[][]{new float[]{4 * 30}, 
-                        new float[]{((float[][][]) DEFAULT_RATE[INDEX_RETEST_RATE])[0][2][0] * 2}},}, // From email 20171019 TC Summary
+                    new float[][]{
+                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
+                    },},
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -1016,8 +1036,9 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             inputParam = new Object[]{
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 new float[][][]{
-                    new float[][]{new float[]{4 * 30}, 
-                        new float[]{((float[][][]) DEFAULT_RATE[INDEX_RETEST_RATE])[0][2][0] * 2}},}, 
+                    new float[][]{
+                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f *2}
+                    },},
                 0.5f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -1030,9 +1051,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-        
-        
-        
+
     }
 
     public void singleRun(File testDir, Object[] parameters)
@@ -1041,8 +1060,6 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         Population_ACCEPtPlus pop;
         testDir.mkdirs(); // Create directory if not exists
         File importDir = new File(IMPORT_PATH);
-
-        
 
         File[] existedPop = importDir.exists() ? importDir.listFiles(new FileFilter() {
             @Override
@@ -1178,11 +1195,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         if (NUM_SIM_TOTAL == 0) { // For deduging
             return;
         }
-        
-        if(popSelction != null){
-            System.out.println("Number of population selected = " + popSelction.length);            
+
+        if (popSelction != null) {
+            System.out.println("Number of population selected = " + popSelction.length);
         }
-        
 
         long ticInf = System.currentTimeMillis();
 
@@ -1198,11 +1214,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
             if (existPop.exists()) {
                 //System.out.println("Result population, " + existPop.getAbsolutePath() + " already exist. Simulation NOT Run");
-            } else if(popSelction != null && Arrays.binarySearch(popSelction, s) <0 ){
+            } else if (popSelction != null && Arrays.binarySearch(popSelction, s) < 0) {
                 //System.out.println("Pop file " + popFile.getName() + " is not incldued in popSelection. Simulation NOT Run");
             } else {
                 System.out.println("Simulation using pop file " + popFile.getName());
-                
+
                 if (!useParallel) {
                     runnable.run();
                 } else {
@@ -1409,7 +1425,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                             };
                         } else {
                             introClassifier = new Classifier_ACCEPt();
-                            prevalByClass = opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.TARGET_PREVAL;                            
+                            prevalByClass = opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation.TARGET_PREVAL;
                         }
 
                         sim.getPopulation().setInstantInfection(0, introClassifier, prevalByClass, 296);
@@ -1691,7 +1707,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         sim.setPrevalStoreFreq(prevalenceStoreFreq, prevalStorePath);
                         textOutput.println("Prevalence stored at " + prevalStorePath.getAbsolutePath() + " with frequency of " + prevalenceStoreFreq);
                     }
-                    
+
                     textOutput.println("First rng = " + sim.getPopulation().getRNG().nextInt());
 
                     sim.run();
