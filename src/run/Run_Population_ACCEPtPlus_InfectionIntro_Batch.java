@@ -263,7 +263,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // 18.5% for <3 weeks + 9.6% from manuscript commments 
         new float[][][]{
             new float[][]{
-                new float[]{21, 4 * 30}, new float[]{0.185f, 0.096f}
+                new float[]{21, 4 * 30}, new float[]{0.185f, 0.185f+0.096f}
             },},
         //INDEX_PARTNER_TREATMENT_RATE        
         // float or float[]
@@ -424,7 +424,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
                 new float[][][]{
                     new float[][]{
-                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
+                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, (0.185f + 0.096f) * 2}
                     },},
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
@@ -445,7 +445,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
                 new float[][][]{
                     new float[][]{
-                        new float[]{21, 4 * 30}, new float[]{0.185f, 0.096f * 2}
+                        new float[]{21, 4 * 30}, new float[]{0.185f, (0.185f + 0.096f) * 2}
                     },},
                 DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
