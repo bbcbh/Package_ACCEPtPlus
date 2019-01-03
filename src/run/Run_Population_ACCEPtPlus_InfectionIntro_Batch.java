@@ -1208,7 +1208,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         for (int s = 0; s < NUM_SIM_TOTAL; s++) {
             File popFile = new File(importDir, "pop_S" + s + "_T0.zip");
             Importation_Simulation_SingleBatch_Runnable runnable
-                    = new Importation_Simulation_SingleBatch_Runnable(s, popFile, testDir, parameters);
+                    = new Importation_Simulation_SingleBatch_Runnable(s, popFile, testDir, parameters, SIM_DURATION);
 
             File existPop = new File(testDir, "pop_S" + s + "_T0.zip");
 
@@ -1330,13 +1330,15 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         final int simId;
         final File OUTPUT_PATH;
         final Object[] param;
+        final int sim_duration;
 
         public Importation_Simulation_SingleBatch_Runnable(
-                int s, File popFile, File dirPath, Object[] param) {
+                int s, File popFile, File dirPath, Object[] param, int sim_duration) {
             this.simId = s;
             this.popFile = popFile;
             this.OUTPUT_PATH = dirPath;
             this.param = param;
+            this.sim_duration = sim_duration;
         }
 
         @Override
@@ -1373,7 +1375,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     long seed = pop.getSeed();
                     sim.setPopulation(pop);
                     int startTime = pop.getGlobalTime();
-                    int numYrToRun = 30;
+                    int numYrToRun = sim_duration / AbstractIndividualInterface.ONE_YEAR_INT;
 
                     sim.getRunnableParam()[Runnable_Population_ACCEPtPlus.RUNNABLE_SIM_DURATION]
                             = new int[]{numYrToRun, AbstractIndividualInterface.ONE_YEAR_INT};

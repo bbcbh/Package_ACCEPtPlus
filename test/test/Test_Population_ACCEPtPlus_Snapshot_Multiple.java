@@ -27,8 +27,8 @@ public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
 
     public static final File RESULTS_DIR = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\TestDir");
 
-    public static boolean decodeBase = true;
-    public static boolean decodePreval = !true;
+    public static boolean decodeBase = !true;
+    public static boolean decodePreval = true;
 
     // Result store format:
     // int[fIndex][# total, # infected]
