@@ -33,13 +33,15 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
         "PROP_SKIP_DATA_SET", // For simulation batch: Binary number indices to skip which scenario, For optimistion - Binary number indices for targetPrevalSel
         "PROP_INTRO_TYPE",
         "PROP_ACCEPT_SIM_TYPE", // 0 = simulation batch (default), 1 = optimistion (NM) 2 = optimisation (GA) 
+        "PROP_MASS_SRN_SETTING" // Default mass screen setting - int[] { introAt, duration } 
     };
     public static final Class[] PROP_CLASS_ACCEPT = {
-        Integer.class, Integer.class, Integer.class,};
+        Integer.class, Integer.class, Integer.class, int[].class};
 
     public static final int PROP_SKIP_DATA_SET = PROP_NAME.length;
     public static final int PROP_INTRO_TYPE = PROP_SKIP_DATA_SET + 1;
     public static final int PROP_ACCEPT_SIM_TYPE = PROP_INTRO_TYPE + 1;
+    public static final int PROP_MASS_SRN_SETTING = PROP_ACCEPT_SIM_TYPE + 1;
 
     public static final String POP_PROP_INIT_PREFIX = "POP_PROP_INIT_PREFIX_";
     protected String[] propModelInitStr = null;
@@ -180,7 +182,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
             default:
 
-                rArg = new String[7];
+                rArg = new String[8];
                 rArg[0] = baseDir.getAbsolutePath();
                 rArg[1] = propVal[PROP_POP_IMPORT_PATH] == null ? "" : (String) propVal[PROP_POP_IMPORT_PATH];
                 rArg[2] = propVal[PROP_NUM_SIM_PER_SET] == null ? "" : ((Integer) propVal[PROP_NUM_SIM_PER_SET]).toString();
@@ -188,6 +190,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 rArg[4] = propVal[PROP_INTRO_TYPE] == null ? "" : ((Integer) propVal[PROP_INTRO_TYPE]).toString();
                 rArg[5] = propVal[PROP_SNAP_FREQ] == null ? "" : ((Integer) propVal[PROP_SNAP_FREQ]).toString();
                 rArg[6] = propVal[PROP_NUM_SNAP] == null ? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
+                rArg[7] = propVal[PROP_MASS_SRN_SETTING] == null? "" : Arrays.toString((int[]) propVal[PROP_MASS_SRN_SETTING]);
 
                 try {
                     Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);

@@ -18,14 +18,11 @@ import static sim.Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFE
 import util.FileZipper;
 
 /**
- * 
+ *
  * @author Ben Hui
- * 
+ *
  */
-
 public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
-
-    public static final File RESULTS_DIR = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\TestDir");
 
     public static boolean decodeBase = !true;
     public static boolean decodePreval = true;
@@ -37,6 +34,13 @@ public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
     public static final int RES_STORE_LENGTH = RES_STORE_ACCEPT + 1;
 
     public static void main(String[] arg) throws IOException, ClassNotFoundException {
+
+        File RESULTS_DIR = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\TestDir");
+        
+        if(arg.length > 0){
+            RESULTS_DIR = new File(arg[0]);
+        }
+
         File[] resCollections = RESULTS_DIR.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
@@ -87,7 +91,7 @@ public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
 
                         int[] entry;
 
-                        try {                                                                                                                
+                        try {
                             while (true) {
                                 int timeIndex;
                                 entry = (int[]) inStream.readObject();
@@ -158,8 +162,8 @@ public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
                         inStream.close();
                         tempFile.delete();
                     } catch (Exception ex) {
-                        
-                        System.err.println(ex.getClass().getName() + " throw when extracting " + prevalZip.getAbsolutePath() +". File skipped.");
+
+                        System.err.println(ex.getClass().getName() + " throw when extracting " + prevalZip.getAbsolutePath() + ". File skipped.");
 
                     }
                 }

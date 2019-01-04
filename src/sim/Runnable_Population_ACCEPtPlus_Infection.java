@@ -474,9 +474,17 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
                         if (massSrnSchedule[cI] != null) {
                             while (massSrnSchedulePt[cI] < massSrnSchedule[cI].length
                                     && massSrnScheduleAt[cI][massSrnSchedulePt[cI]] == population.getGlobalTime()) {
+
+                                if (massSrnSchedulePt[cI] == 0) {
+                                    String msg = "Mass srn for indivduals of class #"
+                                            + cI + " at " + population.getGlobalTime();
+                                    outputPrintStream.println(msg);
+                                }
+
                                 Person_ACCEPtPlusSingleInflection person = (Person_ACCEPtPlusSingleInflection) massSrnSchedule[cI][massSrnSchedulePt[cI]];
                                 testPerson(person, TEST_TYPE_MASS_SCREEN, testRNG, offset);
                                 massSrnSchedulePt[cI]++;
+
                             }
 
                         }

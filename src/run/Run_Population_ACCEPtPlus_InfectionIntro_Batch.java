@@ -36,6 +36,7 @@ import util.Classifier_Gender_Age_Specific_Infection;
 import util.Classifier_Gender_Infection;
 import util.FileZipper;
 import util.PersonClassifier;
+import util.PropValUtils;
 
 /**
  *
@@ -263,7 +264,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // 18.5% for <3 weeks + 9.6% from manuscript commments 
         new float[][][]{
             new float[][]{
-                new float[]{21, 4 * 30}, new float[]{0.185f, 0.185f+0.096f}
+                new float[]{21, 4 * 30}, new float[]{0.185f, 0.185f + 0.096f}
             },},
         //INDEX_PARTNER_TREATMENT_RATE        
         // float or float[]
@@ -284,6 +285,13 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         null,
         // INDEX_STORE_PREVAL_FREQ
         null,};
+
+    float[] DEFAULT_MASS_SRN_SETTING = {
+        // Default mass screen setting - float[] { introAt, duration , coverage for male, coverage for female} 
+        50 * 365,
+        6 * 7,
+        0.69f * 0.7f,
+        0.85f * 0.7f,};
 
     public Integer[] getPopSelction() {
         return popSelction;
@@ -349,6 +357,15 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             }
         }
 
+        if (arg.length > 7) {
+            if (!arg[7].isEmpty()) {
+                float[] propMassSrnSetting = (float[]) PropValUtils.propStrToObject(arg[7], float[].class);
+                System.arraycopy(propMassSrnSetting, 0, DEFAULT_MASS_SRN_SETTING, 0, propMassSrnSetting.length);
+                System.out.println("Default mass screen setting  = " + Arrays.toString(DEFAULT_MASS_SRN_SETTING));
+            }
+
+        }
+
     }
 
     public void batchRun()
@@ -356,7 +373,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         File targetDir;
         Object[] inputParam;
         long tic;
-        int DURATION_MASS_SCR = 6 * 7;
+        int DEFAULT_START_TIME_MASS_SCR = (int) DEFAULT_MASS_SRN_SETTING[0];
+        int DEFAULT_DURATION_MASS_SCR = (int) DEFAULT_MASS_SRN_SETTING[1];
+        float[] DEFAULT_COVERAGE_MASS_SCR = Arrays.copyOfRange(DEFAULT_MASS_SRN_SETTING, 2, 4); //new float[]{0.69f * 0.7f, 0.85f * 0.7f};
+
         Run_Population_ACCEPtPlus_InfectionIntro_Batch batchRun = this;
         int datasetCount = 0;
 
@@ -542,10 +562,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, DURATION_MASS_SCR},
-                        new int[]{5 * 360, DURATION_MASS_SCR},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -565,7 +585,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 DEFAULT_RATE[INDEX_RETEST_RATE],
                 new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    5 * 360f, 0.5f, 5 * 360f + DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
+                    5 * 360f, 0.5f, 5 * 360f + DEFAULT_DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
@@ -588,8 +608,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     },
                     new float[]{0.69f * 0.7f, 0.85f * 0.7f},
                     new int[][]{
-                        new int[]{5 * 360, DURATION_MASS_SCR},
-                        new int[]{5 * 360, DURATION_MASS_SCR},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -608,7 +628,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 DEFAULT_RATE[INDEX_RETEST_RATE],
                 new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    5 * 360f, 0.6f, 5 * 360f + DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
+                    5 * 360f, 0.6f, 5 * 360f + DEFAULT_DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
@@ -629,10 +649,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, DURATION_MASS_SCR},
-                        new int[]{5 * 360, DURATION_MASS_SCR},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -651,7 +671,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 DEFAULT_RATE[INDEX_RETEST_RATE],
                 new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    5 * 360f, 0.7f, 5 * 360f + DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
+                    5 * 360f, 0.7f, 5 * 360f + DEFAULT_DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
@@ -672,10 +692,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, DURATION_MASS_SCR},
-                        new int[]{5 * 360, DURATION_MASS_SCR},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -694,7 +714,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 DEFAULT_RATE[INDEX_RETEST_RATE],
                 new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    5 * 360f, 0.5f, 5 * 360f + DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
+                    5 * 360f, 0.5f, 5 * 360f + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
@@ -715,10 +735,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, DURATION_MASS_SCR},
-                        new int[]{5 * 360, DURATION_MASS_SCR},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -737,7 +757,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 DEFAULT_RATE[INDEX_RETEST_RATE],
                 new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    5 * 360f, 0.6f, 5 * 360f + DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
+                    5 * 360f, 0.6f, 5 * 360f + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
@@ -758,10 +778,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, DURATION_MASS_SCR},
-                        new int[]{5 * 360, DURATION_MASS_SCR},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -780,7 +800,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 DEFAULT_RATE[INDEX_RETEST_RATE],
                 new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    5 * 360f, 0.7f, 5 * 360f + DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
+                    5 * 360f, 0.7f, 5 * 360f + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
@@ -801,10 +821,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, DURATION_MASS_SCR},
-                        new int[]{5 * 360, DURATION_MASS_SCR},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -844,10 +864,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, massScr},
-                        new int[]{5 * 360, massScr},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -887,10 +907,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, massScr},
-                        new int[]{5 * 360, massScr},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -931,10 +951,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, massScr},
-                        new int[]{5 * 360, massScr},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -975,10 +995,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         }
 
                     },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
-                        new int[]{5 * 360, massScr},
-                        new int[]{5 * 360, massScr},}
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
+                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
                 },
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
@@ -1037,7 +1057,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
                 new float[][][]{
                     new float[][]{
-                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f *2}
+                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
                     },},
                 0.5f,
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
@@ -1375,7 +1395,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     long seed = pop.getSeed();
                     sim.setPopulation(pop);
                     int startTime = pop.getGlobalTime();
-                    int numYrToRun = sim_duration / AbstractIndividualInterface.ONE_YEAR_INT;
+                    int numYrToRun = (int) Math.ceil( sim_duration / AbstractIndividualInterface.ONE_YEAR_INT);
 
                     sim.getRunnableParam()[Runnable_Population_ACCEPtPlus.RUNNABLE_SIM_DURATION]
                             = new int[]{numYrToRun, AbstractIndividualInterface.ONE_YEAR_INT};
