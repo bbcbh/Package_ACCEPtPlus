@@ -22,7 +22,9 @@ import util.PropValUtils;
 /**
  *
  * @author Ben Hui
- * @version 20181025
+ * @version 20190107
+ * 
+ * 20190107 : Addition a comment in code in relation to intro type.
  *
  *
  *
@@ -31,7 +33,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
     public static final String[] PROP_NAME_ACCEPT = {
         "PROP_SKIP_DATA_SET", // For simulation batch: Binary number indices to skip which scenario, For optimistion - Binary number indices for targetPrevalSel
-        "PROP_INTRO_TYPE",
+        "PROP_INTRO_TYPE", // Intro type:  0 = no intro, 1 = initial, 2 = periodic
         "PROP_ACCEPT_SIM_TYPE", // 0 = simulation batch (default), 1 = optimistion (NM) 2 = optimisation (GA) 
         "PROP_MASS_SRN_SETTING" // Default mass screen setting - int[] { introAt, duration } 
     };

@@ -41,7 +41,7 @@ import util.PropValUtils;
 /**
  *
  * @author Ben
- * @version 20181121
+ * @version 20190107
  *
  * <pre>
  * History:
@@ -50,6 +50,7 @@ import util.PropValUtils;
  * 20181011 - Add support for simulation run time
  * 20181018 - Add suport for pop selection
  * 20181121 - Add scenario for PT and retest only
+ * 20190107 - Minor correction to output printed relate to simulation duration. Adjustment to the detection of import pop to be accordance of pop selection 
  * </pre>
  */
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
@@ -352,7 +353,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             if (!arg[6].isEmpty()) {
                 int numSnap = Integer.parseInt(arg[6]);
                 SIM_DURATION = (DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ] == null)
-                        ? (30 * numSnap) : (((Integer) DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]) * numSnap);
+                        ? (30 * numSnap) : (int) Math.ceil(((Integer) DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]) * numSnap);
                 System.out.println("Sim duration = " + SIM_DURATION);
             }
         }
@@ -1088,7 +1089,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             }
         }) : new File[0];
 
-        boolean importingPopExist = existedPop.length >= NUM_SIM_TOTAL;
+        boolean importingPopExist = existedPop.length >= (popSelction!= null? popSelction.length: NUM_SIM_TOTAL);
 
         boolean useParallel = NUM_SIM_TOTAL > 1;
 
