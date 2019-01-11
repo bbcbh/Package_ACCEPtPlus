@@ -14,7 +14,7 @@ public class Test_Population_ACCEPtPlus_Simulation_Batch {
 
         boolean decodePreval = true;
 
-        String path = "C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\TestDir"; // Location of .prop file
+        String path = "C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\Test"; // Location of .prop file
 
         //path = "C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\SimResults\\BestSoFar";
         Simulation_Population_ACCEPtPlus.main(new String[]{path});
