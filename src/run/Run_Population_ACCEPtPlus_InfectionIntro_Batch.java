@@ -35,13 +35,14 @@ import util.Classifier_ACCEPt;
 import util.Classifier_Gender_Age_Specific_Infection;
 import util.Classifier_Gender_Infection;
 import util.FileZipper;
+import util.PartnerHistoryInterface;
 import util.PersonClassifier;
 import util.PropValUtils;
 
 /**
  *
  * @author Ben
- * @version 20190107
+ * @version 20190117
  *
  * <pre>
  * History:
@@ -50,7 +51,9 @@ import util.PropValUtils;
  * 20181011 - Add support for simulation run time
  * 20181018 - Add suport for pop selection
  * 20181121 - Add scenario for PT and retest only
- * 20190107 - Minor correction to output printed relate to simulation duration. Adjustment to the detection of import pop to be accordance of pop selection 
+ * 20190107 - Minor correction to output printed relate to simulation duration. Adjustment to the detection of import pop to be accordance of pop selection
+ * 20190117 - Change the mass screening setting to reflect survey 1 partcipation
+ * 20190121 - Change the classifier for mass screening
  * </pre>
  */
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
@@ -291,8 +294,29 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // Default mass screen setting - float[] { introAt, duration , coverage for male, coverage for female} 
         50 * 365,
         6 * 7,
-        0.69f * 0.7f,
-        0.85f * 0.7f,};
+        0.042f,
+        0.098f, };  // 7% f
+
+    PersonClassifier MASS_SCREENING_CLASSIFIER = new PersonClassifier() {
+        @Override
+        public int classifyPerson(AbstractIndividualInterface p) {    
+            
+            boolean nonVirgin = (p instanceof PartnerHistoryInterface)?
+                    ((PartnerHistoryInterface) p).getPartnerHistoryLifetimePt() > 0: true;                        
+            
+            if (nonVirgin && p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
+                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
+                return p.isMale() ? 0 : 1;
+            } else {
+                return -1;
+            }
+        }
+
+        @Override
+        public int numClass() {
+            return 2;
+        }
+    };
 
     public Integer[] getPopSelction() {
         return popSelction;
@@ -376,7 +400,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         long tic;
         int DEFAULT_START_TIME_MASS_SCR = (int) DEFAULT_MASS_SRN_SETTING[0];
         int DEFAULT_DURATION_MASS_SCR = (int) DEFAULT_MASS_SRN_SETTING[1];
-        float[] DEFAULT_COVERAGE_MASS_SCR = Arrays.copyOfRange(DEFAULT_MASS_SRN_SETTING, 2, 4); //new float[]{0.69f * 0.7f, 0.85f * 0.7f};
+        float[] DEFAULT_COVERAGE_MASS_SCR = Arrays.copyOfRange(DEFAULT_MASS_SRN_SETTING, 2, 4);
 
         Run_Population_ACCEPtPlus_InfectionIntro_Batch batchRun = this;
         int datasetCount = 0;
@@ -546,23 +570,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
@@ -590,24 +598,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
-                    new float[]{0.69f * 0.7f, 0.85f * 0.7f},
+                    MASS_SCREENING_CLASSIFIER,
+                    DEFAULT_COVERAGE_MASS_SCR, //new float[]{0.69f * 0.7f, 0.85f * 0.7f},
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
                         new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
@@ -633,23 +625,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
@@ -676,23 +652,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
@@ -719,23 +679,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
@@ -762,23 +706,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
@@ -805,23 +733,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
@@ -848,23 +760,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
@@ -891,23 +787,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
@@ -935,23 +815,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
@@ -979,23 +843,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
                 new Object[]{
-                    new PersonClassifier() {
-                        @Override
-                        public int classifyPerson(AbstractIndividualInterface p) {
-                            if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
-                                    && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
-                                return p.isMale() ? 0 : 1;
-                            } else {
-                                return -1;
-                            }
-                        }
-
-                        @Override
-                        public int numClass() {
-                            return 2;
-                        }
-
-                    },
+                    MASS_SCREENING_CLASSIFIER,
                     DEFAULT_COVERAGE_MASS_SCR,
                     new int[][]{
                         new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
@@ -1089,7 +937,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             }
         }) : new File[0];
 
-        boolean importingPopExist = existedPop.length >= (popSelction!= null? popSelction.length: NUM_SIM_TOTAL);
+        boolean importingPopExist = existedPop.length >= (popSelction != null ? popSelction.length : NUM_SIM_TOTAL);
 
         boolean useParallel = NUM_SIM_TOTAL > 1;
 
@@ -1396,7 +1244,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     long seed = pop.getSeed();
                     sim.setPopulation(pop);
                     int startTime = pop.getGlobalTime();
-                    int numYrToRun = (int) Math.ceil( sim_duration / AbstractIndividualInterface.ONE_YEAR_INT);
+                    int numYrToRun = (int) Math.ceil(sim_duration / AbstractIndividualInterface.ONE_YEAR_INT);
 
                     sim.getRunnableParam()[Runnable_Population_ACCEPtPlus.RUNNABLE_SIM_DURATION]
                             = new int[]{numYrToRun, AbstractIndividualInterface.ONE_YEAR_INT};

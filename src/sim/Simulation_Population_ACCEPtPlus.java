@@ -38,7 +38,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
         "PROP_MASS_SRN_SETTING" // Default mass screen setting - int[] { introAt, duration } 
     };
     public static final Class[] PROP_CLASS_ACCEPT = {
-        Integer.class, Integer.class, Integer.class, int[].class};
+        Integer.class, Integer.class, Integer.class, float[].class};
 
     public static final int PROP_SKIP_DATA_SET = PROP_NAME.length;
     public static final int PROP_INTRO_TYPE = PROP_SKIP_DATA_SET + 1;
@@ -192,7 +192,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 rArg[4] = propVal[PROP_INTRO_TYPE] == null ? "" : ((Integer) propVal[PROP_INTRO_TYPE]).toString();
                 rArg[5] = propVal[PROP_SNAP_FREQ] == null ? "" : ((Integer) propVal[PROP_SNAP_FREQ]).toString();
                 rArg[6] = propVal[PROP_NUM_SNAP] == null ? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
-                rArg[7] = propVal[PROP_MASS_SRN_SETTING] == null? "" : Arrays.toString((int[]) propVal[PROP_MASS_SRN_SETTING]);
+                rArg[7] = propVal[PROP_MASS_SRN_SETTING] == null? "" : Arrays.toString((float[]) propVal[PROP_MASS_SRN_SETTING]);
 
                 try {
                     Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
