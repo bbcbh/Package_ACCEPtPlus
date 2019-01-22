@@ -26,12 +26,13 @@ import util.PersonClassifier;
 /**
  *
  * @author Ben Hui
- * @version 20181017
+ * @version 20190122
  *
  * <pre>
  * History
  *
- * 201581017 - Alterate implmentation of preval store
+ * 20151017 - Alterate implmentation of preval store
+ * 20190122 - Add support for variable testing rate
  *
  * </pre>
  */
@@ -248,7 +249,7 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
 
         // Annual test
         PersonClassifier TEST_CLASSIFIER = (PersonClassifier) runnableParam[RUNNABLE_INFECTION_TESTING_CLASSIFIER];
-        float[] TEST_COVERAGE = (float[]) runnableParam[RUNNABLE_INFECTION_TESTING_COVERAGE];
+        Object TEST_COVERAGE = runnableParam[RUNNABLE_INFECTION_TESTING_COVERAGE];
 
         AbstractIndividualInterface[][] testSchedule = new AbstractIndividualInterface[TEST_CLASSIFIER.numClass()][];
         int[] testPt = new int[TEST_CLASSIFIER.numClass()];
@@ -335,7 +336,28 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
                     }
 
                     for (int c = 0; c < TEST_CLASSIFIER.numClass(); c++) {
-                        testTotal[c] = Math.round(counter[c] * TEST_COVERAGE[c]);
+                        if (TEST_COVERAGE instanceof float[]) {
+                            testTotal[c] = Math.round(counter[c] * ((float[]) TEST_COVERAGE)[c]);
+                        } else {
+                            // Variable testing coverage
+                            float[] classSpecificEnt = ((float[][]) TEST_COVERAGE)[c];
+                            int numSwitch = (classSpecificEnt.length + 1) / 2;
+                            
+                            int ratePt 
+                                    = Arrays.binarySearch(classSpecificEnt, numSwitch, classSpecificEnt.length, population.getGlobalTime() - offset);
+                            
+                            float testCoverage;
+                            
+                            if(ratePt>= 0){
+                                testCoverage = classSpecificEnt[ratePt+1 - numSwitch];
+                            }else{
+                                ratePt =  -(ratePt+ 1);                                
+                                testCoverage = classSpecificEnt[ratePt - numSwitch];
+                            }                          
+                            
+                            testTotal[c] = Math.round(counter[c] * testCoverage);
+
+                        }
                         testSchedule[c] = new AbstractIndividualInterface[testTotal[c]];
                     }
 

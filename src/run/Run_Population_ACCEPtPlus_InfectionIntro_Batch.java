@@ -54,6 +54,7 @@ import util.PropValUtils;
  * 20190107 - Minor correction to output printed relate to simulation duration. Adjustment to the detection of import pop to be accordance of pop selection
  * 20190117 - Change the mass screening setting to reflect survey 1 partcipation
  * 20190121 - Change the classifier for mass screening
+ * 20190122 - Add variable testing rate support
  * </pre>
  */
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
@@ -292,18 +293,27 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
     float[] DEFAULT_MASS_SRN_SETTING = {
         // Default mass screen setting - float[] { introAt, duration , coverage for male, coverage for female} 
-        50 * 365,
+        AbstractIndividualInterface.ONE_YEAR_INT,
         6 * 7,
         0.042f,
-        0.098f, };  // 7% f
+        0.098f,};  // 7% for total pop, 30:70 M-F split
+
+    float[][] TIME_VAR_TEST_RATE_CONTROL = {
+        // Class, Rate at time 0, rate at time 1 , ... time points 
+        // Male
+        new float[]{0.081f, 0.058f, 0.066f, 0.072f, 
+            AbstractIndividualInterface.ONE_YEAR_INT*2, AbstractIndividualInterface.ONE_YEAR_INT *3, AbstractIndividualInterface.ONE_YEAR_INT * 4},
+        // Female
+        new float[]{0.181f, 0.151f, 0.155f, 0.169f, 
+            AbstractIndividualInterface.ONE_YEAR_INT*2, AbstractIndividualInterface.ONE_YEAR_INT *3, AbstractIndividualInterface.ONE_YEAR_INT*4},};
 
     PersonClassifier MASS_SCREENING_CLASSIFIER = new PersonClassifier() {
         @Override
-        public int classifyPerson(AbstractIndividualInterface p) {    
-            
-            boolean nonVirgin = (p instanceof PartnerHistoryInterface)?
-                    ((PartnerHistoryInterface) p).getPartnerHistoryLifetimePt() > 0: true;                        
-            
+        public int classifyPerson(AbstractIndividualInterface p) {
+
+            boolean nonVirgin = (p instanceof PartnerHistoryInterface)
+                    ? ((PartnerHistoryInterface) p).getPartnerHistoryLifetimePt() > 0 : true;
+
             if (nonVirgin && p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT
                     && p.getAge() < 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
                 return p.isMale() ? 0 : 1;
@@ -563,9 +573,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         datasetCount++;
         // 8: Mass screen - default rate
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen");
+            targetDir = new File(BATCH_BASE_PATH, "MassScreen_Control");
             inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                TIME_VAR_TEST_RATE_CONTROL[0],
+                TIME_VAR_TEST_RATE_CONTROL[1],
                 DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
@@ -586,24 +597,19 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             System.out.println("Time required = " + (((float) tic) / 1000) + " s");
         }
         datasetCount++;
-        // 9:  Mass screen + 50 PT
+        // 9:  Mass screen + Changing rate
         if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_50_PT_During");
+            targetDir = new File(BATCH_BASE_PATH, "Control_Only");
 
             inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    DEFAULT_START_TIME_MASS_SCR, 0.5f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
+                TIME_VAR_TEST_RATE_CONTROL[0],
+                TIME_VAR_TEST_RATE_CONTROL[1],
+                DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
                 DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
                 DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR, //new float[]{0.69f * 0.7f, 0.85f * 0.7f},
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
-                },
+                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING],
                 DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
             };
 
@@ -1353,11 +1359,23 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     };
 
                     sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_CLASSIFIER] = testCoverageClassifier;
-                    sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]
-                            = new float[]{(float) param[INDEX_TEST_RATE_MALE], (float) param[INDEX_TEST_RATE_FEMALE]};
 
-                    textOutput.println("Testing coverage = " + Arrays.toString(
-                            (float[]) sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]));
+                    if (param[INDEX_TEST_RATE_MALE] instanceof float[] && param[INDEX_TEST_RATE_FEMALE] instanceof float[]) {
+
+                        sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]
+                                = new float[][]{(float[]) param[INDEX_TEST_RATE_MALE], (float[]) param[INDEX_TEST_RATE_FEMALE]};
+
+                        textOutput.println("Testing coverage = " + Arrays.deepToString(
+                                (float[][]) sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]));
+
+                    } else {
+                        sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]
+                                = new float[]{(float) param[INDEX_TEST_RATE_MALE], (float) param[INDEX_TEST_RATE_FEMALE]};
+
+                        textOutput.println("Testing coverage = " + Arrays.toString(
+                                (float[]) sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_TESTING_COVERAGE]));
+
+                    }
 
                     sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_RETEST_RATE]
                             = param[INDEX_RETEST_RATE];
