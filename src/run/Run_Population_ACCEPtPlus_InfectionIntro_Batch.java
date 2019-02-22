@@ -181,6 +181,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     public static final int INDEX_INTRO_INFECTION = INDEX_CONT_TEST_30PLUS + 1;
     public static final int INDEX_MASS_SCREENING_SETTING = INDEX_INTRO_INFECTION + 1;
     public static final int INDEX_STORE_PREVAL_FREQ = INDEX_MASS_SCREENING_SETTING + 1;
+    public static final int LENGTH_SINGLE_RUN_PARAM = INDEX_STORE_PREVAL_FREQ + 1;
 
     public static final int BEST_FIT_PARAM_INTRO_RATE_MALE = 0; // If negative, only for first time step
     public static final int BEST_FIT_PARAM_INTRO_RATE_FEMALE = BEST_FIT_PARAM_INTRO_RATE_MALE + 1;
@@ -301,11 +302,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     float[][] TIME_VAR_TEST_RATE_CONTROL = {
         // Class, Rate at time 0, rate at time 1 , ... time points 
         // Male
-        new float[]{0.081f, 0.058f, 0.066f, 0.072f, 
-            AbstractIndividualInterface.ONE_YEAR_INT*2, AbstractIndividualInterface.ONE_YEAR_INT *3, AbstractIndividualInterface.ONE_YEAR_INT * 4},
+        new float[]{0.081f, 0.058f, 0.066f, 0.072f,
+            AbstractIndividualInterface.ONE_YEAR_INT * 2, AbstractIndividualInterface.ONE_YEAR_INT * 3, AbstractIndividualInterface.ONE_YEAR_INT * 4},
         // Female
-        new float[]{0.181f, 0.151f, 0.155f, 0.169f, 
-            AbstractIndividualInterface.ONE_YEAR_INT*2, AbstractIndividualInterface.ONE_YEAR_INT *3, AbstractIndividualInterface.ONE_YEAR_INT*4},};
+        new float[]{0.181f, 0.151f, 0.155f, 0.169f,
+            AbstractIndividualInterface.ONE_YEAR_INT * 2, AbstractIndividualInterface.ONE_YEAR_INT * 3, AbstractIndividualInterface.ONE_YEAR_INT * 4},};
 
     PersonClassifier MASS_SCREENING_CLASSIFIER = new PersonClassifier() {
         @Override
@@ -365,7 +366,9 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         if (arg.length > 3) {
             if (!arg[3].isEmpty()) {
                 SKIP_DATA = Integer.parseInt(arg[3]);
-                System.out.println("Skip dataset = 0b" + Integer.toBinaryString(SKIP_DATA));
+                if (SKIP_DATA >= 0) {
+                    System.out.println("Skip dataset = 0b" + Integer.toBinaryString(SKIP_DATA));
+                }
             }
         }
         if (arg.length > 4) {
@@ -417,513 +420,564 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
         BATCH_BASE_PATH.mkdirs();
 
-        // 0: Baseline rate
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Baseline");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+        if (SKIP_DATA >= 0) {
 
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            // 0: Baseline rate
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Baseline");
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 1: Intervention rate         
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Intervention_rate");
+                inputParam = new Object[]{
+                    INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                    INTERVENTION_RATE[INDEX_RETEST_RATE],
+                    DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 2: No 30 Plus
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_30_Plus_No");
+                inputParam = new Object[]{
+                    INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                    INTERVENTION_RATE[INDEX_RETEST_RATE],
+                    DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY],
+                    new float[]{0f, 0f, 0f},
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 3: Double Retesting
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double");
+                inputParam = new Object[]{
+                    INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                    new float[][][]{
+                        new float[][]{
+                            new float[]{21, 4 * 30}, new float[]{0.185f * 2, (0.185f + 0.096f) * 2}
+                        },},
+                    DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 4: Double Retesting - 3 weeks plus only
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double_3_Wk_Plus_Only");
+                inputParam = new Object[]{
+                    INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                    new float[][][]{
+                        new float[][]{
+                            new float[]{21, 4 * 30}, new float[]{0.185f, (0.185f + 0.096f) * 2}
+                        },},
+                    DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 5: Increase PT rate - 50        
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_PT_50");
+                inputParam = new Object[]{
+                    INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                    INTERVENTION_RATE[INDEX_RETEST_RATE],
+                    0.5f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 6: Increase PT rate - 80
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_PT_80");
+                inputParam = new Object[]{
+                    INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                    INTERVENTION_RATE[INDEX_RETEST_RATE],
+                    0.8f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 7: Double retest + Increase PT rate - 80
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double_PT_80");
+                inputParam = new Object[]{
+                    INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
+                    new float[][][]{
+                        new float[][]{
+                            new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
+                        },},
+                    0.8f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 8: Mass screen + Control testing rate
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_Control");
+                inputParam = new Object[]{
+                    TIME_VAR_TEST_RATE_CONTROL[0],
+                    TIME_VAR_TEST_RATE_CONTROL[1],
+                    DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 9:  Control testing rate only
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Control_Only");
+
+                inputParam = new Object[]{
+                    TIME_VAR_TEST_RATE_CONTROL[0],
+                    TIME_VAR_TEST_RATE_CONTROL[1],
+                    DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING],
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 10: Mass screen + Control testing rate + 50 PT
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_Control_50_PT_During");
+                inputParam = new Object[]{
+                    TIME_VAR_TEST_RATE_CONTROL[0],
+                    TIME_VAR_TEST_RATE_CONTROL[1],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                        DEFAULT_START_TIME_MASS_SCR, 0.5f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 11: Mass screen + 70 PT   
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_70_PT_During");
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                        DEFAULT_START_TIME_MASS_SCR, 0.7f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 12: Mass screen + 50 PT for 3 months yr   
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_50_PT_3_month");
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                        DEFAULT_START_TIME_MASS_SCR, 0.5f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 13: Mass screen + 60 PT for 3 mths   
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_60_PT_3_month");
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                        DEFAULT_START_TIME_MASS_SCR, 0.6f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 14: Mass screen + 70 PT for 3 mths   
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_70_PT_3_month");
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                        DEFAULT_START_TIME_MASS_SCR, 0.7f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 15: Mass screen - 1 month 
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_1_month");
+                int massScr = 30;
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 16: Mass screen - 2 month 
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_2_month");
+                int massScr = 2 * 30;
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 17: Mass screen - 1 month PT 70 3 month
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_1_month_70_PT_3_month");
+                int massScr = 1 * 30;
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                        5 * 360f, 0.7f, 5 * 360f + massScr + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 18: Mass screen - 2 month PT 70 3 month
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "MassScreen_2_month_70_PT_3_month");
+                int massScr = 2 * 30;
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                        5 * 360f, 0.7f, 5 * 360f + massScr + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    new Object[]{
+                        MASS_SCREENING_CLASSIFIER,
+                        DEFAULT_COVERAGE_MASS_SCR,
+                        new int[][]{
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
+                            new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
+                    },
+                    DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
+                };
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+
+            // 19: Double Retesting - background rate
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_Retesting_Double");
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    new float[][][]{
+                        new float[][]{
+                            new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
+                        },},
+                    DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 20: Increase PT rate - 50 ,  baseline rate      
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_PT_50");
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    DEFAULT_RATE[INDEX_RETEST_RATE],
+                    0.5f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
+            // 21: Increase PT rate - 50 + retest , baseline rate  
+            if (((SKIP_DATA >> datasetCount) & 1) == 0) {
+                targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_PT_50_Retesting_Double");
+                inputParam = new Object[]{
+                    DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
+                    new float[][][]{
+                        new float[][]{
+                            new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
+                        },},
+                    0.5f,
+                    DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
+                    DEFAULT_RATE[INDEX_INTRO_INFECTION],
+                    DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
+
+                tic = System.currentTimeMillis();
+                System.out.println("Generating data for " + targetDir.getAbsolutePath());
+                batchRun.singleRun(targetDir, inputParam);
+                tic = System.currentTimeMillis() - tic;
+                System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+            }
+            datasetCount++;
         }
-        datasetCount++;
-        // 1: Intervention rate         
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate");
-            inputParam = new Object[]{
-                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
-                INTERVENTION_RATE[INDEX_RETEST_RATE],
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
 
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
+    }
+
+    public void singleRun(File testDir, String[] parameters_str)
+            throws IOException, ClassNotFoundException, InterruptedException {
+
+        if (parameters_str != null) {
+            Object[] defaultObj = new Object[DEFAULT_RATE.length];
+            for (int i = 0; i < defaultObj.length; i++) {
+                defaultObj[i] = DEFAULT_RATE[i];
+                if (parameters_str[i] != null && parameters_str[i].trim().length() > 0) {
+                    switch (i) {
+                        case INDEX_TEST_RATE_MALE:
+                        case INDEX_TEST_RATE_FEMALE:                                                                                    
+                        case INDEX_PARTNER_TREATMENT_RATE:
+                            // float or float[] options                            
+                            if(parameters_str[i].contains(",")){
+                                defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], float[].class);        
+                            }else{
+                                defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], Float.class);                                
+                            }                                                                                                                
+                            break;                                                        
+
+                        case INDEX_MASS_SCREENING_SETTING:
+                            int DEFAULT_START_TIME_MASS_SCR = (int) DEFAULT_MASS_SRN_SETTING[0];
+                            int DEFAULT_DURATION_MASS_SCR = (int) DEFAULT_MASS_SRN_SETTING[1];
+                            float[] INPUT_COVERAGE_MASS_SCR = (float[]) util.PropValUtils.propStrToObject(parameters_str[i], float[].class);
+                            defaultObj[i] = new Object[]{
+                                MASS_SCREENING_CLASSIFIER,
+                                INPUT_COVERAGE_MASS_SCR,
+                                new int[][]{
+                                    new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
+                                    new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
+                            };
+                            break;
+                        case INDEX_STORE_PREVAL_FREQ:
+                            defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], Integer.class);
+                            break;
+                        default:
+                            defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], DEFAULT_RATE[i].getClass());
+
+                    }
+
+                }
+            }
+            singleRun(testDir, defaultObj);
         }
-        datasetCount++;
-        // 2: No 30 Plus
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_30_Plus_No");
-            inputParam = new Object[]{
-                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
-                INTERVENTION_RATE[INDEX_RETEST_RATE],
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY],
-                new float[]{0f, 0f, 0f},
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 3: Double Retesting
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double");
-            inputParam = new Object[]{
-                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
-                new float[][][]{
-                    new float[][]{
-                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, (0.185f + 0.096f) * 2}
-                    },},
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 4: Double Retesting - 3 weeks plus only
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double_3_Wk_Plus_Only");
-            inputParam = new Object[]{
-                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
-                new float[][][]{
-                    new float[][]{
-                        new float[]{21, 4 * 30}, new float[]{0.185f, (0.185f + 0.096f) * 2}
-                    },},
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 5: Increase PT rate - 50        
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_PT_50");
-            inputParam = new Object[]{
-                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
-                INTERVENTION_RATE[INDEX_RETEST_RATE],
-                0.5f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 6: Increase PT rate - 80
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_PT_80");
-            inputParam = new Object[]{
-                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
-                INTERVENTION_RATE[INDEX_RETEST_RATE],
-                0.8f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 7: Double retest + Increase PT rate - 80
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Intervention_rate_Retesting_Double_PT_80");
-            inputParam = new Object[]{
-                INTERVENTION_RATE[INDEX_TEST_RATE_MALE], INTERVENTION_RATE[INDEX_TEST_RATE_FEMALE],
-                new float[][][]{
-                    new float[][]{
-                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
-                    },},
-                0.8f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 8: Mass screen - default rate
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_Control");
-            inputParam = new Object[]{
-                TIME_VAR_TEST_RATE_CONTROL[0],
-                TIME_VAR_TEST_RATE_CONTROL[1],
-                DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 9:  Mass screen + Changing rate
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Control_Only");
-
-            inputParam = new Object[]{
-                TIME_VAR_TEST_RATE_CONTROL[0],
-                TIME_VAR_TEST_RATE_CONTROL[1],
-                DEFAULT_RATE[INDEX_RETEST_RATE], DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING],
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 10: Mass screen + 60 PT
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_60_PT_During");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    DEFAULT_START_TIME_MASS_SCR, 0.6f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 11: Mass screen + 70 PT   
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_70_PT_During");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    DEFAULT_START_TIME_MASS_SCR, 0.7f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 12: Mass screen + 50 PT for 3 months yr   
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_50_PT_3_month");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    DEFAULT_START_TIME_MASS_SCR, 0.5f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 13: Mass screen + 60 PT for 3 mths   
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_60_PT_3_month");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    DEFAULT_START_TIME_MASS_SCR, 0.6f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 14: Mass screen + 70 PT for 3 mths   
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_70_PT_3_month");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    DEFAULT_START_TIME_MASS_SCR, 0.7f, DEFAULT_START_TIME_MASS_SCR + DEFAULT_DURATION_MASS_SCR + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]}, //0.7f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, DEFAULT_DURATION_MASS_SCR},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 15: Mass screen - 1 month 
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_1_month");
-            int massScr = 30;
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 16: Mass screen - 2 month 
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_2_month");
-            int massScr = 2 * 30;
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 17: Mass screen - 1 month PT 70 3 month
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_1_month_70_PT_3_month");
-            int massScr = 1 * 30;
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    5 * 360f, 0.7f, 5 * 360f + massScr + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 18: Mass screen - 2 month PT 70 3 month
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "MassScreen_2_month_70_PT_3_month");
-            int massScr = 2 * 30;
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                new float[]{(float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                    5 * 360f, 0.7f, 5 * 360f + massScr + 30 * 3, (float) DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE]},
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                new Object[]{
-                    MASS_SCREENING_CLASSIFIER,
-                    DEFAULT_COVERAGE_MASS_SCR,
-                    new int[][]{
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},
-                        new int[]{DEFAULT_START_TIME_MASS_SCR, massScr},}
-                },
-                DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ]
-            };
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-
-        // 19: Double Retesting - background rate
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_Retesting_Double");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                new float[][][]{
-                    new float[][]{
-                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
-                    },},
-                DEFAULT_RATE[INDEX_PARTNER_TREATMENT_RATE],
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 20: Increase PT rate - 50 ,  baseline rate      
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_PT_50");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                DEFAULT_RATE[INDEX_RETEST_RATE],
-                0.5f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
-        // 21: Increase PT rate - 50 + retest , baseline rate  
-        if (((SKIP_DATA >> datasetCount) & 1) == 0) {
-            targetDir = new File(BATCH_BASE_PATH, "Baseline_rate_PT_50_Retesting_Double");
-            inputParam = new Object[]{
-                DEFAULT_RATE[INDEX_TEST_RATE_MALE], DEFAULT_RATE[INDEX_TEST_RATE_FEMALE],
-                new float[][][]{
-                    new float[][]{
-                        new float[]{21, 4 * 30}, new float[]{0.185f * 2, 0.096f * 2}
-                    },},
-                0.5f,
-                DEFAULT_RATE[INDEX_TEST_SENSITIVITY], DEFAULT_RATE[INDEX_CONT_TEST_30PLUS],
-                DEFAULT_RATE[INDEX_INTRO_INFECTION],
-                DEFAULT_RATE[INDEX_MASS_SCREENING_SETTING], DEFAULT_RATE[INDEX_STORE_PREVAL_FREQ],};
-
-            tic = System.currentTimeMillis();
-            System.out.println("Generating data for " + targetDir.getAbsolutePath());
-            batchRun.singleRun(targetDir, inputParam);
-            tic = System.currentTimeMillis() - tic;
-            System.out.println("Time required = " + (((float) tic) / 1000) + " s");
-        }
-        datasetCount++;
 
     }
 

@@ -32,7 +32,7 @@ import util.PropValUtils;
 public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
     public static final String[] PROP_NAME_ACCEPT = {
-        "PROP_SKIP_DATA_SET", // For simulation batch: Binary number indices to skip which scenario, For optimistion - Binary number indices for targetPrevalSel
+        "PROP_SKIP_DATA_SET", // For simulation batch: Binary number indices to skip which scenario, or -1 if not used, For optimistion - Binary number indices for targetPrevalSel
         "PROP_INTRO_TYPE", // Intro type:  0 = no intro, 1 = initial, 2 = periodic
         "PROP_ACCEPT_SIM_TYPE", // 0 = simulation batch (default), 1 = optimistion (NM) 2 = optimisation (GA) 
         "PROP_MASS_SRN_SETTING" // Default mass screen setting - int[] { introAt, duration } 
@@ -47,6 +47,9 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
     public static final String POP_PROP_INIT_PREFIX = "POP_PROP_INIT_PREFIX_";
     protected String[] propModelInitStr = null;
+    
+    public static final String POP_SINGLE_RUN_PARAM_PREFIX = "POP_SINGLE_RUN_PARAM_PREFIX_";
+    protected String[] propSingleRunParamStr = null;        
 
     protected Object[] propVal = new Object[PROP_NAME.length + PROP_NAME_ACCEPT.length];
     protected File baseDir = new File("");
@@ -68,19 +71,19 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
             }
         }
 
-        int maxFieldNum = 0;
+        int maxFieldPropInitNum = 0;
         for (Iterator<Object> it = prop.keySet().iterator(); it.hasNext();) {
             String k = (String) it.next();
             if (k.startsWith(POP_PROP_INIT_PREFIX)) {
                 if (prop.getProperty(k) != null) {
-                    maxFieldNum = Math.max(maxFieldNum,
+                    maxFieldPropInitNum = Math.max(maxFieldPropInitNum,
                             Integer.parseInt(k.substring(POP_PROP_INIT_PREFIX.length())));
                 }
             }
         }
 
-        if (maxFieldNum >= 0) {
-            propModelInitStr = new String[maxFieldNum + 1];
+        if (maxFieldPropInitNum >= 0) {
+            propModelInitStr = new String[maxFieldPropInitNum + 1];
             for (int i = 0; i < propModelInitStr.length; i++) {
                 String res = prop.getProperty(POP_PROP_INIT_PREFIX + i);
                 if (res != null) {
@@ -88,6 +91,18 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 }
             }
         }
+        
+        // Single run parameter, if set 
+        for (int i = 0; i < Run_Population_ACCEPtPlus_InfectionIntro_Batch.LENGTH_SINGLE_RUN_PARAM; i++){
+            String res = prop.getProperty(POP_SINGLE_RUN_PARAM_PREFIX + i);
+            if(res != null){
+                if(propSingleRunParamStr == null){
+                    propSingleRunParamStr = new String[Run_Population_ACCEPtPlus_InfectionIntro_Batch.LENGTH_SINGLE_RUN_PARAM]; 
+                }                     
+                propSingleRunParamStr[i] = res;
+            }                                                            
+        }                                                        
+        
     }
 
     @Override
@@ -225,8 +240,16 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                         }
 
                     }
-
-                    run.batchRun();
+                    
+                    if(propSingleRunParamStr != null){ 
+                        baseDir.mkdirs();
+                        run.singleRun(baseDir, propSingleRunParamStr);
+                    }   
+                    
+                    if(((Integer) propVal[PROP_SKIP_DATA_SET]) >= 0){
+                        run.batchRun();
+                    }
+                    
 
                 } catch (ClassNotFoundException ex) {
                     ex.printStackTrace(System.err);
