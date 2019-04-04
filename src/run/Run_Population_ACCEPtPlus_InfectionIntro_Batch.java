@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +43,7 @@ import util.PropValUtils;
 /**
  *
  * @author Ben
- * @version 20190117
+ * @version 20190305
  *
  * <pre>
  * History:
@@ -55,11 +56,13 @@ import util.PropValUtils;
  * 20190117 - Change the mass screening setting to reflect survey 1 partcipation
  * 20190121 - Change the classifier for mass screening
  * 20190122 - Add variable testing rate support
+ * 20190305 - Add decodePrevalenceStore method support
+ * 20190402 - Add support for non-sampling of tranmission parameter
  * </pre>
  */
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
-    public static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
+    public int NUM_THREADS = Runtime.getRuntime().availableProcessors();
     //public static final PersonClassifier ACCEPT_CLASSIFIER = new Classifier_ACCEPt();
     public static final long BASE_SEED = 2251912970037127827l;
 
@@ -944,15 +947,15 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                 if (parameters_str[i] != null && parameters_str[i].trim().length() > 0) {
                     switch (i) {
                         case INDEX_TEST_RATE_MALE:
-                        case INDEX_TEST_RATE_FEMALE:                                                                                    
+                        case INDEX_TEST_RATE_FEMALE:
                         case INDEX_PARTNER_TREATMENT_RATE:
                             // float or float[] options                            
-                            if(parameters_str[i].contains(",")){
-                                defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], float[].class);        
-                            }else{
-                                defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], Float.class);                                
-                            }                                                                                                                
-                            break;                                                        
+                            if (parameters_str[i].contains(",")) {
+                                defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], float[].class);
+                            } else {
+                                defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], Float.class);
+                            }
+                            break;
 
                         case INDEX_MASS_SCREENING_SETTING:
                             int DEFAULT_START_TIME_MASS_SCR = (int) DEFAULT_MASS_SRN_SETTING[0];
@@ -981,6 +984,10 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
     }
 
+    public void set_NUM_THREADS(int NUM_THREADS) {
+        this.NUM_THREADS = NUM_THREADS;
+    }
+
     public void singleRun(File testDir, Object[] parameters)
             throws IOException, ClassNotFoundException, InterruptedException {
 
@@ -997,7 +1004,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
         boolean importingPopExist = existedPop.length >= (popSelction != null ? popSelction.length : NUM_SIM_TOTAL);
 
-        boolean useParallel = NUM_SIM_TOTAL > 1;
+        boolean useParallel = NUM_THREADS > 1 && NUM_THREADS > 1;
 
         // Generate new population
         if (!importingPopExist) {
@@ -1170,7 +1177,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         if (useParallel && executor != null) {
             executor.shutdown();
             if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
-                System.out.println("Inf Thread time-out!");
+                System.err.println("Inf Thread time-out!");
             }
 
         }
@@ -1178,6 +1185,12 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         System.out.println("Time required for simulation (s) = " + (System.currentTimeMillis() - ticInf) / 1000f);
 
         util.Snapshot_Population_ACCEPtPlus.decodePopZips(testDir.getAbsolutePath());
+        try {
+            util.Snapshot_Population_ACCEPtPlus.decodePrevalenceStore(testDir, NUM_THREADS);
+        } catch (ExecutionException | FileNotFoundException ex) {
+            ex.printStackTrace(System.err);
+
+        }
 
     }
 
@@ -1542,11 +1555,15 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_FEMALE_TO_MALE] + BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA],
                         BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_FEMALE_TO_MALE],}; // M->F, F->M
 
-                    if (BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_MF] > 0 || BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_FM] > 0) {
-                        RandomGenerator popRNG = pop.getInfList()[0].getRNG();
-                        double[] betaParam;
-                        BetaDistribution beta;
+                    RandomGenerator popRNG = pop.getInfList()[0].getRNG();
+                    double[] betaParam;
+                    BetaDistribution beta;
 
+                    key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_MF_INDEX);
+
+                    if (trans[0] < 0) { // use original value if < 0
+                        textOutput.println("Tranmission MF from existing value of " + Arrays.toString((double[]) ct_inf.getParameter(key)));
+                    } else {
                         if (BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_MF] > 0) {
                             betaParam = generatedBetaParam(new double[]{trans[0], BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_MF]});
                             textOutput.println("Tranmission MF sample from Beta " + Arrays.toString(betaParam)
@@ -1558,6 +1575,16 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                             trans[0] = beta.sample();
                         }
 
+                        ct_inf.setParameter(key, new double[]{trans[0], 0});
+                        textOutput.println("Trans MF = " + Arrays.toString((double[]) ct_inf.getParameter(key)));
+
+                    }
+                    
+                    key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_FM_INDEX);
+                    
+                    if (trans[1] < 0) { // use original value if < 0)                         
+                        textOutput.println("Tranmission FM from existing value of " + Arrays.toString((double[]) ct_inf.getParameter(key)));                        
+                    }else{
                         if (BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_FM] > 0) {
                             betaParam = generatedBetaParam(new double[]{trans[1], BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_FM]});
                             textOutput.println("Tranmission FM sample from Beta " + Arrays.toString(betaParam)
@@ -1568,17 +1595,11 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                             beta = new BetaDistribution(popRNG, betaParam[0], betaParam[1]);
                             trans[1] = beta.sample();
                         }
+                        ct_inf.setParameter(key, new double[]{trans[1], 0});
+                        textOutput.println("Trans FM = " + Arrays.toString((double[]) ct_inf.getParameter(key)));
                     }
 
-                    key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_MF_INDEX);
-                    ct_inf.setParameter(key, new double[]{trans[0], 0});
-
-                    textOutput.println("Trans MF = " + Arrays.toString((double[]) ct_inf.getParameter(key)));
-
-                    key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_FM_INDEX);
-                    ct_inf.setParameter(key, new double[]{trans[1], 0});
-
-                    textOutput.println("Trans FM = " + Arrays.toString((double[]) ct_inf.getParameter(key)));
+                   
 
                     textOutput.println("Inf Sim #" + simId + " seed = " + seed + " created");
 

@@ -211,6 +211,8 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
                 try {
                     Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
+                    
+                    run.set_NUM_THREADS(propVal[PROP_USE_PARALLEL] == null? Runtime.getRuntime().availableProcessors() : ((Integer) propVal[PROP_USE_PARALLEL]));
                     for (int v = 0; v < propModelInitStr.length; v++) {
                         if (propModelInitStr[v] != null) {
                             // Best fit parameters
