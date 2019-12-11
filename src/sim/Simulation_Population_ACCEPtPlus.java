@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 import opt.Abstract_Population_ACCEPtPlus_IntroInfection_Optimisation;
@@ -23,7 +24,7 @@ import util.PropValUtils;
  *
  * @author Ben Hui
  * @version 20190107
- * 
+ *
  * 20190107 : Addition a comment in code in relation to intro type.
  *
  *
@@ -47,9 +48,9 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
 
     public static final String POP_PROP_INIT_PREFIX = "POP_PROP_INIT_PREFIX_";
     protected String[] propModelInitStr = null;
-    
+
     public static final String POP_SINGLE_RUN_PARAM_PREFIX = "POP_SINGLE_RUN_PARAM_PREFIX_";
-    protected String[] propSingleRunParamStr = null;        
+    protected String[] propSingleRunParamStr = null;
 
     protected Object[] propVal = new Object[PROP_NAME.length + PROP_NAME_ACCEPT.length];
     protected File baseDir = new File("");
@@ -91,18 +92,18 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 }
             }
         }
-        
+
         // Single run parameter, if set 
-        for (int i = 0; i < Run_Population_ACCEPtPlus_InfectionIntro_Batch.LENGTH_SINGLE_RUN_PARAM; i++){
+        for (int i = 0; i < Run_Population_ACCEPtPlus_InfectionIntro_Batch.LENGTH_SINGLE_RUN_PARAM; i++) {
             String res = prop.getProperty(POP_SINGLE_RUN_PARAM_PREFIX + i);
-            if(res != null){
-                if(propSingleRunParamStr == null){
-                    propSingleRunParamStr = new String[Run_Population_ACCEPtPlus_InfectionIntro_Batch.LENGTH_SINGLE_RUN_PARAM]; 
-                }                     
+            if (res != null) {
+                if (propSingleRunParamStr == null) {
+                    propSingleRunParamStr = new String[Run_Population_ACCEPtPlus_InfectionIntro_Batch.LENGTH_SINGLE_RUN_PARAM];
+                }
                 propSingleRunParamStr[i] = res;
-            }                                                            
-        }                                                        
-        
+            }
+        }
+
     }
 
     @Override
@@ -181,7 +182,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                     int indices = (Integer) propVal[PROP_SKIP_DATA_SET];
                     boolean[] tarPrevalSel = runOpt.getTargetPrevalSel();
                     for (int i = 0; i < tarPrevalSel.length; i++) {
-                        tarPrevalSel[i] = (indices & 1 << ((tarPrevalSel.length -1) - i)) != 0;
+                        tarPrevalSel[i] = (indices & 1 << ((tarPrevalSel.length - 1) - i)) != 0;
                     }
                     runOpt.setTargetPrevalSel(tarPrevalSel);
 
@@ -207,12 +208,12 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 rArg[4] = propVal[PROP_INTRO_TYPE] == null ? "" : ((Integer) propVal[PROP_INTRO_TYPE]).toString();
                 rArg[5] = propVal[PROP_SNAP_FREQ] == null ? "" : ((Integer) propVal[PROP_SNAP_FREQ]).toString();
                 rArg[6] = propVal[PROP_NUM_SNAP] == null ? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
-                rArg[7] = propVal[PROP_MASS_SRN_SETTING] == null? "" : Arrays.toString((float[]) propVal[PROP_MASS_SRN_SETTING]);
+                rArg[7] = propVal[PROP_MASS_SRN_SETTING] == null ? "" : Arrays.toString((float[]) propVal[PROP_MASS_SRN_SETTING]);
 
                 try {
                     Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
-                    
-                    run.set_NUM_THREADS(propVal[PROP_USE_PARALLEL] == null? Runtime.getRuntime().availableProcessors() : ((Integer) propVal[PROP_USE_PARALLEL]));
+
+                    run.set_NUM_THREADS(propVal[PROP_USE_PARALLEL] == null ? Runtime.getRuntime().availableProcessors() : ((Integer) propVal[PROP_USE_PARALLEL]));
                     for (int v = 0; v < propModelInitStr.length; v++) {
                         if (propModelInitStr[v] != null) {
                             // Best fit parameters
@@ -223,12 +224,25 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                     if (propVal[PROP_POP_SELECT_CSV] != null) {
                         File csv = new File(propVal[PROP_POP_SELECT_CSV].toString());
                         ArrayList<Integer> arr = null;
+                        HashMap<Integer, double[]> popParamMap = new HashMap();
+
                         try {
                             try (BufferedReader lines = new BufferedReader(new FileReader(csv))) {
                                 arr = new ArrayList();
-                                String line;
-                                while ((line = lines.readLine()) != null) {
-                                    arr.add(Integer.parseInt(line));
+                                String line;                                
+                                
+                                while ((line = lines.readLine()) != null) {                                    
+                                    String[] ent = line.split(",");     
+                                    Integer popSelect = Integer.parseInt(ent[0]);
+                                    arr.add(popSelect);
+                                    
+                                    if(ent.length > 0){
+                                        double[] param = new double[ent.length-1];                                        
+                                        for(int p = 0; p < param.length; p++){
+                                            param[p] = Double.parseDouble(ent[p+1]);
+                                        }                                                                              
+                                        popParamMap.put(popSelect, param);                                        
+                                    }                                                                       
                                 }
                             }
                         } catch (IOException | NumberFormatException ex) {
@@ -239,19 +253,19 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                             popSel = arr.toArray(new Integer[arr.size()]);
                             Arrays.sort(popSel);
                             run.setPopSelction(popSel);
+                            run.setPopParamMap(popParamMap);
                         }
 
                     }
-                    
-                    if(propSingleRunParamStr != null){ 
+
+                    if (propSingleRunParamStr != null) {
                         baseDir.mkdirs();
                         run.singleRun(baseDir, propSingleRunParamStr);
-                    }   
-                    
-                    if(((Integer) propVal[PROP_SKIP_DATA_SET]) >= 0){
+                    }
+
+                    if (((Integer) propVal[PROP_SKIP_DATA_SET]) >= 0) {
                         run.batchRun();
                     }
-                    
 
                 } catch (ClassNotFoundException ex) {
                     ex.printStackTrace(System.err);

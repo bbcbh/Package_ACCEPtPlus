@@ -20,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +44,7 @@ import util.PropValUtils;
 /**
  *
  * @author Ben
- * @version 20190305
+ * @version 20191211
  *
  * <pre>
  * History:
@@ -58,6 +59,7 @@ import util.PropValUtils;
  * 20190122 - Add variable testing rate support
  * 20190305 - Add decodePrevalenceStore method support
  * 20190402 - Add support for non-sampling of tranmission parameter
+ * 20191211 - Add support for pre-defined pop selection tranmission parameter
  * </pre>
  */
 public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
@@ -74,6 +76,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     public int SKIP_DATA = 0;
 
     private Integer[] popSelction = null;
+    private HashMap<Integer, double[]> popParamMap = null;
 
     public double[] BEST_FIT_PARAMETER = new double[]{
         0,
@@ -184,7 +187,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     public static final int INDEX_INTRO_INFECTION = INDEX_CONT_TEST_30PLUS + 1;
     public static final int INDEX_MASS_SCREENING_SETTING = INDEX_INTRO_INFECTION + 1;
     public static final int INDEX_STORE_PREVAL_FREQ = INDEX_MASS_SCREENING_SETTING + 1;
-    public static final int LENGTH_SINGLE_RUN_PARAM = INDEX_STORE_PREVAL_FREQ + 1;
+    public static final int INDEX_PRESET_TRANMISSION_RATE = INDEX_STORE_PREVAL_FREQ + 1;
+    public static final int LENGTH_SINGLE_RUN_PARAM = INDEX_PRESET_TRANMISSION_RATE + 1;
 
     public static final int BEST_FIT_PARAM_INTRO_RATE_MALE = 0; // If negative, only for first time step
     public static final int BEST_FIT_PARAM_INTRO_RATE_FEMALE = BEST_FIT_PARAM_INTRO_RATE_MALE + 1;
@@ -261,6 +265,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // Object[]{ PersonClassifier, float[] treatment_rate_by_classIndex, int[][] at_by_classIndex{[at, duration, ...]}   
         null,
         // INDEX_STORE_PREVAL_FREQ
+        null,
+        // INDEX_PRESET_TRANMISSION_RATE
         null,};
 
     public static final Object[] INTERVENTION_RATE = {
@@ -293,6 +299,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // Object[]{ PersonClassifier, float[] treatment_rate_by_classIndex, int[][] at_by_classIndex{[at, duration, ...]}   
         null,
         // INDEX_STORE_PREVAL_FREQ
+        null,
+        // INDEX_PRESET_TRANMISSION_RATE
         null,};
 
     float[] DEFAULT_MASS_SRN_SETTING = {
@@ -338,6 +346,14 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
 
     public void setPopSelction(Integer[] popSelction) {
         this.popSelction = popSelction;
+    }
+
+    public HashMap<Integer, double[]> getPopParamMap() {
+        return popParamMap;
+    }
+
+    public void setPopParamMap(HashMap<Integer, double[]> popParamMap) {
+        this.popParamMap = popParamMap;
     }
 
     public static void main(String[] arg) throws IOException, ClassNotFoundException, InterruptedException {
@@ -1140,9 +1156,6 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         int numInExe = 0;
 
         for (int s = 0; s < NUM_SIM_TOTAL; s++) {
-            File popFile = new File(importDir, "pop_S" + s + "_T0.zip");
-            Importation_Simulation_SingleBatch_Runnable runnable
-                    = new Importation_Simulation_SingleBatch_Runnable(s, popFile, testDir, parameters, SIM_DURATION);
 
             File existPop = new File(testDir, "pop_S" + s + "_T0.zip");
 
@@ -1151,7 +1164,37 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
             } else if (popSelction != null && Arrays.binarySearch(popSelction, s) < 0) {
                 //System.out.println("Pop file " + popFile.getName() + " is not incldued in popSelection. Simulation NOT Run");
             } else {
-                System.out.println("Simulation using pop file " + popFile.getName());
+
+                File popFile = new File(importDir, "pop_S" + s + "_T0.zip");
+
+                StringBuilder outputStr = new StringBuilder("Simulation using pop file ");
+                outputStr.append(popFile.getName());
+
+                if (popParamMap != null) {
+                    double[] paramVal = popParamMap.get(s);
+                    if (paramVal != null) {
+                        outputStr.append(", using pre-defined param of ");
+                        outputStr.append(Arrays.toString(paramVal));
+                    }
+
+                    // Replace tranmission parameter with preset version
+                    if (paramVal.length >= 2) { // Tranmission parameter                        
+                        double tran_mf = paramVal[0];
+                        double tran_fm = paramVal[1];
+
+                        if (parameters.length < INDEX_PRESET_TRANMISSION_RATE) {
+                            parameters = Arrays.copyOf(parameters, INDEX_PRESET_TRANMISSION_RATE);
+                        }
+
+                        parameters[INDEX_PRESET_TRANMISSION_RATE] = new double[]{tran_mf, tran_fm};
+
+                    }
+                }
+
+                System.out.println(outputStr.toString());
+
+                Importation_Simulation_SingleBatch_Runnable runnable
+                        = new Importation_Simulation_SingleBatch_Runnable(s, popFile, testDir, parameters, SIM_DURATION);
 
                 if (!useParallel) {
                     runnable.run();
@@ -1554,14 +1597,23 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     double[] trans = new double[]{
                         BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_FEMALE_TO_MALE] + BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA],
                         BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_FEMALE_TO_MALE],}; // M->F, F->M
+                    
+                    boolean usePreset = false;
+
+                    if (param.length > INDEX_PRESET_TRANMISSION_RATE) {
+                        usePreset = true;
+                        trans = (double[]) param[INDEX_PRESET_TRANMISSION_RATE]; // M->F, F->M
+                    }
 
                     RandomGenerator popRNG = pop.getInfList()[0].getRNG();
                     double[] betaParam;
                     BetaDistribution beta;
 
                     key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_MF_INDEX);
-
-                    if (trans[0] < 0) { // use original value if < 0
+                    
+                    if(usePreset){
+                       textOutput.println("Tranmission MF from preset value of " + Arrays.toString((double[]) new double[]{trans[0], 0}));
+                    } else if (trans[0] < 0) { // use original value if < 0
                         textOutput.println("Tranmission MF from existing value of " + Arrays.toString((double[]) ct_inf.getParameter(key)));
                     } else {
                         if (BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_MF] > 0) {
@@ -1579,12 +1631,14 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         textOutput.println("Trans MF = " + Arrays.toString((double[]) ct_inf.getParameter(key)));
 
                     }
-                    
+
                     key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_FM_INDEX);
                     
-                    if (trans[1] < 0) { // use original value if < 0)                         
-                        textOutput.println("Tranmission FM from existing value of " + Arrays.toString((double[]) ct_inf.getParameter(key)));                        
-                    }else{
+                    if(usePreset){
+                        textOutput.println("Tranmission FM from preset value of " + Arrays.toString((double[]) new double[]{trans[1], 0}));
+                    } else if (trans[1] < 0) { // use original value if < 0)                         
+                        textOutput.println("Tranmission FM from existing value of " + Arrays.toString((double[]) ct_inf.getParameter(key)));
+                    } else {
                         if (BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_FM] > 0) {
                             betaParam = generatedBetaParam(new double[]{trans[1], BEST_FIT_PARAMETER[BEST_FIT_TRANS_SD_FM]});
                             textOutput.println("Tranmission FM sample from Beta " + Arrays.toString(betaParam)
@@ -1598,8 +1652,6 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         ct_inf.setParameter(key, new double[]{trans[1], 0});
                         textOutput.println("Trans FM = " + Arrays.toString((double[]) ct_inf.getParameter(key)));
                     }
-
-                   
 
                     textOutput.println("Inf Sim #" + simId + " seed = " + seed + " created");
 

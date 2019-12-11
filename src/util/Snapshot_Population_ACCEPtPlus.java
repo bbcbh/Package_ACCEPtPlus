@@ -61,10 +61,39 @@ public class Snapshot_Population_ACCEPtPlus {
     public static final Pattern PATTERN_POPFILE = Pattern.compile("\\w*pop_S(\\d+)_T0.zip");
     public static final Pattern PATTERN_PREVAL_STORE = Pattern.compile("\\w*preval_store_(\\d+).obj.zip");
 
+    static final int CLASSIFIER_AGE_INDEX(double age, boolean isMale) {
+        int index = -1;
+
+        if (age >= 30 * AbstractIndividualInterface.ONE_YEAR_INT
+                || age < 16 * AbstractIndividualInterface.ONE_YEAR_INT) {
+            return -1;
+        }
+
+        if (age >= 16 * AbstractIndividualInterface.ONE_YEAR_INT) {
+            index++;
+        }
+        if (age >= 18 * AbstractIndividualInterface.ONE_YEAR_INT) {
+            index++;
+        }
+        if (age >= 21 * AbstractIndividualInterface.ONE_YEAR_INT) {
+            index++;
+        }
+        if (age >= 25 * AbstractIndividualInterface.ONE_YEAR_INT) {
+            index++;
+        }
+        if (index != -1) {
+            index += isMale ? 0 : 4;
+        }
+        return index;
+
+    }
+
     static final PersonClassifier CLASSIFIER_ACCEPT_GENDER_AGE_GRP = new PersonClassifier() {
         @Override
         public int classifyPerson(AbstractIndividualInterface p) {
+            return CLASSIFIER_AGE_INDEX(p.getAge(), p.isMale());
 
+            /*
             Person_ACCEPtPlusSingleInflection person = (Person_ACCEPtPlusSingleInflection) p;
 
             if (person.getAge() >= 30 * AbstractIndividualInterface.ONE_YEAR_INT
@@ -88,7 +117,8 @@ public class Snapshot_Population_ACCEPtPlus {
             if (index != -1) {
                 index += p.isMale() ? 0 : 4;
             }
-            return index;
+            return index; 
+             */
         }
 
         @Override
@@ -697,7 +727,9 @@ public class Snapshot_Population_ACCEPtPlus {
     // int[fIndex][# total, # infected]
     public static final int RES_PREVAL_STORE_TOTAL = 0;
     public static final int RES_PREVAL_STORE_ACCEPT = RES_PREVAL_STORE_TOTAL + 1;
-    public static final int RES_PREVAL_STORE_LENGTH = RES_PREVAL_STORE_ACCEPT + 1;
+    public static final int RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER = RES_PREVAL_STORE_ACCEPT + 1;
+    public static final int RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT = RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass();
+    public static final int RES_PREVAL_STORE_LENGTH = RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass();
 
     public static void decodePrevalenceStore(File resultDir, int numThreads)
             throws InterruptedException, ExecutionException, FileNotFoundException, FileNotFoundException {
@@ -886,7 +918,9 @@ public class Snapshot_Population_ACCEPtPlus {
                                     }
                                     break;
                                 case Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_ACCEPT:
-                                    if (16 * AbstractIndividualInterface.ONE_YEAR_INT <= entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE] && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE] < 30 * AbstractIndividualInterface.ONE_YEAR_INT && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
+                                    if (16 * AbstractIndividualInterface.ONE_YEAR_INT <= entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE]
+                                            && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE] < 30 * AbstractIndividualInterface.ONE_YEAR_INT
+                                            && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
                                         currentStoreEntry[f][0]++;
                                         if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
                                             currentStoreEntry[f][1]++;
@@ -894,10 +928,40 @@ public class Snapshot_Population_ACCEPtPlus {
                                     }
                                     break;
                                 default:
-                                    if (selIndexList != null) {
-                                        System.err.println("Result store index #" + storeIndex + " not defined");
+                                    if (storeIndex >= Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER
+                                            && storeIndex < Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()) {
+
+                                        int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
+                                                entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
+
+                                        if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER == index) {
+                                            currentStoreEntry[f][0]++;
+                                            if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
+                                                currentStoreEntry[f][1]++;
+                                            }
+                                        }
+
+                                    } else if (storeIndex >= Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT
+                                            && storeIndex < Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()) {
+
+                                        int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
+                                                entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
+
+                                        if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT == index 
+                                                && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
+                                            currentStoreEntry[f][0]++;
+                                            if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
+                                                currentStoreEntry[f][1]++;
+                                            }
+                                        }
+
                                     } else {
-                                        System.out.println("Result store index #" + storeIndex + " skipped");
+
+                                        if (selIndexList != null) {
+                                            System.err.println("Result store index #" + storeIndex + " not defined");
+                                        } else {
+                                            System.out.println("Result store index #" + storeIndex + " skipped");
+                                        }
                                     }
                             }
                         }
@@ -910,6 +974,14 @@ public class Snapshot_Population_ACCEPtPlus {
             PrintWriter[] pWri = new PrintWriter[Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_LENGTH];
             pWri[Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_TOTAL] = new PrintWriter(new File(resultDir, "preval_all.csv"));
             pWri[Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_ACCEPT] = new PrintWriter(new File(resultDir, "preval_accept.csv"));
+            for (int i = 0; i < CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass(); i++) {
+                pWri[Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER + i]
+                        = new PrintWriter(new File(resultDir, "preval_by_gender_age_C" + i + ".csv"));
+
+                pWri[Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT + i]
+                        = new PrintWriter(new File(resultDir, "preval_by_gender_age_accept_C" + i + ".csv"));
+            }
+
             for (int timeIndex = 0; timeIndex < resultStore_time.size(); timeIndex++) {
                 int globalTime = resultStore_time.get(timeIndex);
                 for (int storeIndex = 0; storeIndex < resultsStore.length; storeIndex++) {
