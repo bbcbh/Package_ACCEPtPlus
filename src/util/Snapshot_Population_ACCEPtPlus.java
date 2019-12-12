@@ -7,10 +7,12 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,7 +80,7 @@ public class Snapshot_Population_ACCEPtPlus {
         if (age >= 25 * AbstractIndividualInterface.ONE_YEAR_INT) {
             index++;
         }
-        
+
         if (index != -1) {
             index += isMale ? 0 : 3;
         }
@@ -91,7 +93,6 @@ public class Snapshot_Population_ACCEPtPlus {
         public int classifyPerson(AbstractIndividualInterface p) {
             //return CLASSIFIER_AGE_INDEX(p.getAge(), p.isMale());
 
-            
             Person_ACCEPtPlusSingleInflection person = (Person_ACCEPtPlusSingleInflection) p;
 
             if (person.getAge() >= 30 * AbstractIndividualInterface.ONE_YEAR_INT
@@ -115,8 +116,8 @@ public class Snapshot_Population_ACCEPtPlus {
             if (index != -1) {
                 index += p.isMale() ? 0 : 4;
             }
-            return index; 
-            
+            return index;
+
         }
 
         @Override
@@ -945,7 +946,7 @@ public class Snapshot_Population_ACCEPtPlus {
                                         int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
                                                 entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
 
-                                        if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT == index 
+                                        if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT == index
                                                 && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
                                             currentStoreEntry[f][0]++;
                                             if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
@@ -1005,12 +1006,35 @@ public class Snapshot_Population_ACCEPtPlus {
 
         File prevalZip;
 
+        File prevalZipDecoded;
+
         public Callable_DecodeSinglePrevalStore(File prevalZip) {
             this.prevalZip = prevalZip;
+            this.prevalZipDecoded = new File(prevalZip.getParentFile(), prevalZip.getName() + ".decoded");
         }
 
         @Override
         public int[][] call() throws Exception {
+
+            // Check if there is a decoded file
+            if (this.prevalZipDecoded.exists()) {
+                int[][] res = null;
+                try {
+                    ObjectInputStream inObj = new ObjectInputStream(new FileInputStream(prevalZipDecoded));
+                    res = (int[][]) inObj.readObject();
+                    inObj.close();
+
+                } catch (Exception ex) {
+                    ex.printStackTrace(System.err);
+
+                }
+
+                if (res != null) {
+                    System.out.println("Using decoded preval store in " + prevalZipDecoded.getAbsolutePath());
+                    return res;
+                }
+
+            }
 
             ArrayList<int[]> resultStore = new ArrayList<>();
 
@@ -1058,6 +1082,16 @@ public class Snapshot_Population_ACCEPtPlus {
                             t1[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]);
                 }
             });
+            
+            
+            try{
+                ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(prevalZipDecoded));
+                objOut.writeObject(resArr);
+                objOut.close();                                                
+            }catch(Exception ex){
+                ex.printStackTrace(System.err);
+            }
+            
 
             return resArr;
         }

@@ -13,8 +13,8 @@ import java.util.concurrent.ExecutionException;
  *
  */
 public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
-
     public static boolean decodeBase = !true;
+
     public static boolean decodePreval = true;
 
     public static void main(String[] arg) throws IOException, ClassNotFoundException, ExecutionException, FileNotFoundException, InterruptedException {
