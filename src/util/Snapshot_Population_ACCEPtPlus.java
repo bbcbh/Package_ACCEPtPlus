@@ -72,17 +72,15 @@ public class Snapshot_Population_ACCEPtPlus {
         if (age >= 16 * AbstractIndividualInterface.ONE_YEAR_INT) {
             index++;
         }
-        if (age >= 18 * AbstractIndividualInterface.ONE_YEAR_INT) {
-            index++;
-        }
-        if (age >= 21 * AbstractIndividualInterface.ONE_YEAR_INT) {
+        if (age >= 20 * AbstractIndividualInterface.ONE_YEAR_INT) {
             index++;
         }
         if (age >= 25 * AbstractIndividualInterface.ONE_YEAR_INT) {
             index++;
         }
+        
         if (index != -1) {
-            index += isMale ? 0 : 4;
+            index += isMale ? 0 : 3;
         }
         return index;
 
@@ -91,9 +89,9 @@ public class Snapshot_Population_ACCEPtPlus {
     static final PersonClassifier CLASSIFIER_ACCEPT_GENDER_AGE_GRP = new PersonClassifier() {
         @Override
         public int classifyPerson(AbstractIndividualInterface p) {
-            return CLASSIFIER_AGE_INDEX(p.getAge(), p.isMale());
+            //return CLASSIFIER_AGE_INDEX(p.getAge(), p.isMale());
 
-            /*
+            
             Person_ACCEPtPlusSingleInflection person = (Person_ACCEPtPlusSingleInflection) p;
 
             if (person.getAge() >= 30 * AbstractIndividualInterface.ONE_YEAR_INT
@@ -118,7 +116,7 @@ public class Snapshot_Population_ACCEPtPlus {
                 index += p.isMale() ? 0 : 4;
             }
             return index; 
-             */
+            
         }
 
         @Override

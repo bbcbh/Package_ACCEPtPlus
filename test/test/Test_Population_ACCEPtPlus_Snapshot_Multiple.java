@@ -19,7 +19,7 @@ public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
 
     public static void main(String[] arg) throws IOException, ClassNotFoundException, ExecutionException, FileNotFoundException, InterruptedException {
 
-        File RESULTS_DIR = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\SingleRun");
+        File RESULTS_DIR = new File("C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\Test");
 
         if (arg.length > 0) {
             RESULTS_DIR = new File(arg[0]);

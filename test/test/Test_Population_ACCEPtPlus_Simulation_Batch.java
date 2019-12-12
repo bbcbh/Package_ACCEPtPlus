@@ -19,7 +19,7 @@ public class Test_Population_ACCEPtPlus_Simulation_Batch {
 
        
 
-        String path = "C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\Test\\SingleRun_Control_R100"; // Location of .prop file
+        String path = "C:\\Users\\Bhui\\OneDrive - UNSW\\ACCEPt\\Test"; // Location of .prop file
 
         if (new File(new File(path), SimulationInterface.FILENAME_PROP).exists()) {
             Simulation_Population_ACCEPtPlus.main(new String[]{path});
