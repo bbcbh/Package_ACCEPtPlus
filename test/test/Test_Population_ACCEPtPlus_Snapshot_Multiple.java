@@ -33,7 +33,7 @@ public class Test_Population_ACCEPtPlus_Snapshot_Multiple {
         });
 
         for (File res : resCollections) {
-            Snapshot_Population_ACCEPtPlus.decodeResults(res, decodeBase, decodePreval);
+            Snapshot_Population_ACCEPtPlus.decodeResults(res, decodeBase, decodePreval,4);
         }
     }
 }

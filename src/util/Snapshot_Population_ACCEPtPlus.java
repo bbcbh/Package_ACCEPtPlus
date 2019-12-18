@@ -24,8 +24,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import person.AbstractIndividualInterface;
@@ -734,10 +732,13 @@ public class Snapshot_Population_ACCEPtPlus {
             throws InterruptedException, ExecutionException, FileNotFoundException, FileNotFoundException {
 
         boolean usePrevalStore = true;
+
+        final File decodeProgressFile = new File(resultDir, "deccodeProgress.obj");
+
         File[] preval_store = resultDir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File file) {
-                return file.getName().startsWith(PREVAL_STORE_PREFIX);
+                return file.getName().startsWith(PREVAL_STORE_PREFIX) && file.getName().endsWith(".zip");
             }
         });
 
@@ -823,37 +824,60 @@ public class Snapshot_Population_ACCEPtPlus {
             ExecutorService executor = null;
             int numInExe = 0;
 
+            if (decodeProgressFile.exists()) {
+                try (ObjectInputStream objIn = new ObjectInputStream(new FileInputStream(decodeProgressFile))) {
+                    decodedArr = (Future<int[][]>[]) objIn.readObject();
+                    objIn.close();
+                } catch (IOException | ClassNotFoundException ex) {
+                    ex.printStackTrace(System.err);
+                }
+            }
+
             for (int f = 0; f < preval_store.length; f++) {
-                if (executor == null) {
-                    executor = Executors.newFixedThreadPool(numThreads);
-                }
+                if (decodedArr[f] != null) {
+                    System.out.println("Decoded array already exist from previous iteration");
+                } else {
 
-                boolean submitThread = true;
-
-                if (selIndexList != null) {
-
-                    Matcher m = usePrevalStore ? PATTERN_PREVAL_STORE.matcher(preval_store[f].getName())
-                            : PATTERN_POPFILE.matcher(preval_store[f].getName());
-                    if (m.find()) {
-                        int index = Integer.parseInt(m.group(1));
-                        submitThread = (Arrays.binarySearch(selIndexList, index) >= 0);
+                    if (executor == null) {
+                        executor = Executors.newFixedThreadPool(numThreads);
                     }
-                }
 
-                if (submitThread) {
+                    boolean submitThread = true;
 
-                    decodedArr[f] = executor.submit(new Callable_DecodeSinglePrevalStore(preval_store[f]));
-                    numInExe++;
+                    if (selIndexList != null) {
 
-                    if (numInExe == numThreads) {
-
-                        executor.shutdown();
-
-                        if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
-                            System.out.println("Inf Thread time-out!");
+                        Matcher m = usePrevalStore ? PATTERN_PREVAL_STORE.matcher(preval_store[f].getName())
+                                : PATTERN_POPFILE.matcher(preval_store[f].getName());
+                        if (m.find()) {
+                            int index = Integer.parseInt(m.group(1));
+                            submitThread = (Arrays.binarySearch(selIndexList, index) >= 0);
                         }
-                        executor = null;
-                        numInExe = 0;
+                    }
+
+                    if (submitThread) {
+
+                        decodedArr[f] = executor.submit(new Callable_DecodeSinglePrevalStore(preval_store[f]));
+                        numInExe++;
+
+                        if (numInExe == numThreads) {
+
+                            executor.shutdown();
+
+                            if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
+                                System.out.println("Inf Thread time-out!");
+                            }
+                            executor = null;
+                            numInExe = 0;
+
+                            try {
+                                ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(decodeProgressFile));
+                                objOut.writeObject(decodedArr);
+                                objOut.close();
+                            } catch (IOException ex) {
+                                ex.printStackTrace(System.err);
+                            }
+
+                        }
                     }
                 }
 
@@ -864,6 +888,14 @@ public class Snapshot_Population_ACCEPtPlus {
 
                 if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
                     System.out.println("Inf Thread time-out!");
+                }
+
+                try {
+                    ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(decodeProgressFile));
+                    objOut.writeObject(decodedArr);
+                    objOut.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace(System.err);
                 }
             }
 
@@ -1082,17 +1114,16 @@ public class Snapshot_Population_ACCEPtPlus {
                             t1[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]);
                 }
             });
-            
-            
-            try{
+
+            /*
+            try {
                 ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(prevalZipDecoded));
                 objOut.writeObject(resArr);
-                objOut.close();                                                
-            }catch(Exception ex){
+                objOut.close();
+            } catch (Exception ex) {
                 ex.printStackTrace(System.err);
             }
-            
-
+             */
             return resArr;
         }
 
@@ -1100,12 +1131,17 @@ public class Snapshot_Population_ACCEPtPlus {
 
     public static void decodeResults(File resultDir, boolean decodeBase, boolean decodePreval)
             throws IOException, FileNotFoundException, ClassNotFoundException, ExecutionException, InterruptedException {
+        decodeResults(resultDir, decodeBase, decodePreval, Runtime.getRuntime().availableProcessors());
+    }
+
+    public static void decodeResults(File resultDir, boolean decodeBase, boolean decodePreval, int numThreads)
+            throws IOException, FileNotFoundException, ClassNotFoundException, ExecutionException, InterruptedException {
         if (decodeBase) {
             System.out.println("Decoding results in " + resultDir.getAbsolutePath());
             Snapshot_Population_ACCEPtPlus.decodePopZips(new String[]{resultDir.getAbsolutePath()});
         }
         if (decodePreval) {
-            Snapshot_Population_ACCEPtPlus.decodePrevalenceStore(resultDir, Runtime.getRuntime().availableProcessors());
+            Snapshot_Population_ACCEPtPlus.decodePrevalenceStore(resultDir, numThreads);
 
         }
     }

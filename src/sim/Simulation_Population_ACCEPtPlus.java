@@ -323,9 +323,16 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
         
         if (arg.length > 1) {
             boolean decodeBasePop = arg[1].contains("_base");
-            boolean decodePrevalence = arg[1].contains("_preval");            
+            boolean decodePrevalence = arg[1].contains("_preval");     
+            
+            int numThread = Runtime.getRuntime().availableProcessors();
+            
+            if(arg.length > 2){
+                numThread = Integer.parseInt(arg[2]);
+            }
+            
             try {
-                Snapshot_Population_ACCEPtPlus.decodeResults(dir, decodeBasePop, decodePrevalence);
+                Snapshot_Population_ACCEPtPlus.decodeResults(dir, decodeBasePop, decodePrevalence, numThread);
             } catch (FileNotFoundException | ExecutionException ex) {
                 ex.printStackTrace(System.err);
             }
