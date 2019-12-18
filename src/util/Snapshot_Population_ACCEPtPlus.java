@@ -820,13 +820,16 @@ public class Snapshot_Population_ACCEPtPlus {
 
             System.out.println("Decoding preval store in " + resultDir.getAbsolutePath());
 
-            Future<int[][]>[] decodedArr = new Future[preval_store.length];
+            Future<int[][]>[] decodedArrFuture = new Future[preval_store.length];
+            int[][][] decodeArr = new int[preval_store.length][][];
+            int lastValidIndex = 0;
+
             ExecutorService executor = null;
             int numInExe = 0;
 
             if (decodeProgressFile.exists()) {
                 try (ObjectInputStream objIn = new ObjectInputStream(new FileInputStream(decodeProgressFile))) {
-                    decodedArr = (Future<int[][]>[]) objIn.readObject();
+                    decodeArr = (int[][][]) objIn.readObject();
                     objIn.close();
                 } catch (IOException | ClassNotFoundException ex) {
                     ex.printStackTrace(System.err);
@@ -834,8 +837,9 @@ public class Snapshot_Population_ACCEPtPlus {
             }
 
             for (int f = 0; f < preval_store.length; f++) {
-                if (decodedArr[f] != null) {
-                    System.out.println("Decoded array already exist from previous iteration");
+                if (decodeArr[f] != null) {
+                    System.out.println("Decoding of " + preval_store[f].getName()
+                            + "  skipped as array already exist from previous iteration");
                 } else {
 
                     if (executor == null) {
@@ -856,7 +860,7 @@ public class Snapshot_Population_ACCEPtPlus {
 
                     if (submitThread) {
 
-                        decodedArr[f] = executor.submit(new Callable_DecodeSinglePrevalStore(preval_store[f]));
+                        decodedArrFuture[f] = executor.submit(new Callable_DecodeSinglePrevalStore(preval_store[f]));
                         numInExe++;
 
                         if (numInExe == numThreads) {
@@ -870,8 +874,16 @@ public class Snapshot_Population_ACCEPtPlus {
                             numInExe = 0;
 
                             try {
+
+                                for (int i = lastValidIndex; i < decodeArr.length; i++) {
+                                    if (decodeArr[i] != null) {
+                                        lastValidIndex = i;
+                                    } else if (decodedArrFuture[i] != null) {
+                                        decodeArr[i] = decodedArrFuture[i].get();
+                                    }
+                                }
                                 ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(decodeProgressFile));
-                                objOut.writeObject(decodedArr);
+                                objOut.writeObject(decodeArr);
                                 objOut.close();
                             } catch (IOException ex) {
                                 ex.printStackTrace(System.err);
@@ -891,8 +903,13 @@ public class Snapshot_Population_ACCEPtPlus {
                 }
 
                 try {
+                    for (int i = 0; i < decodeArr.length; i++) {
+                        if (decodeArr[i] == null && decodedArrFuture[i] != null) {
+                            decodeArr[i] = decodedArrFuture[i].get();
+                        }
+                    }
                     ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(decodeProgressFile));
-                    objOut.writeObject(decodedArr);
+                    objOut.writeObject(decodeArr);
                     objOut.close();
                 } catch (IOException ex) {
                     ex.printStackTrace(System.err);
@@ -910,8 +927,8 @@ public class Snapshot_Population_ACCEPtPlus {
             int maxTimeStamp = Integer.MIN_VALUE;
 
             for (int f = 0; f < preval_store.length; f++) {
-                if (decodedArr[f] != null) {
-                    int[][] entCollection = decodedArr[f].get();
+                if (decodeArr[f] != null) {
+                    int[][] entCollection = decodeArr[f];
                     for (int[] entry : entCollection) {
                         int timeIndex;
                         if (maxTimeStamp < entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]) {
