@@ -7,16 +7,17 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OptionalDataException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -61,6 +62,18 @@ public class Snapshot_Population_ACCEPtPlus {
     public static final Pattern PATTERN_POPFILE = Pattern.compile("\\w*pop_S(\\d+)_T0.zip");
     public static final Pattern PATTERN_PREVAL_STORE = Pattern.compile("\\w*preval_store_(\\d+).obj.zip");
 
+    static final PersonClassifier CLASSIFIER_ACCEPT_GENDER_AGE_GRP = new PersonClassifier() {
+        @Override
+        public int classifyPerson(AbstractIndividualInterface p) {
+            return CLASSIFIER_AGE_INDEX(p.getAge(), p.isMale());
+        }
+
+        @Override
+        public int numClass() {
+            return 6;
+        }
+    };
+
     static final int CLASSIFIER_AGE_INDEX(double age, boolean isMale) {
         int index = -1;
 
@@ -86,7 +99,7 @@ public class Snapshot_Population_ACCEPtPlus {
 
     }
 
-    static final PersonClassifier CLASSIFIER_ACCEPT_GENDER_AGE_GRP = new PersonClassifier() {
+    static final PersonClassifier CLASSIFIER_ACCEPT_GENDER_AGE_GRP_YOUNGEST_SEPARATED = new PersonClassifier() {
         @Override
         public int classifyPerson(AbstractIndividualInterface p) {
             //return CLASSIFIER_AGE_INDEX(p.getAge(), p.isMale());
@@ -732,7 +745,7 @@ public class Snapshot_Population_ACCEPtPlus {
             throws InterruptedException, ExecutionException, FileNotFoundException, FileNotFoundException {
 
         boolean usePrevalStore = true;
-
+        boolean extractInFull = false;
         final File decodeProgressFile = new File(resultDir, "deccodeProgress.obj");
 
         File[] preval_store = resultDir.listFiles(new FileFilter() {
@@ -817,206 +830,337 @@ public class Snapshot_Population_ACCEPtPlus {
         }
 
         if (preval_store.length > 0) {
-
-            System.out.println("Decoding preval store in " + resultDir.getAbsolutePath());
-
-            Future<int[][]>[] decodedArrFuture = new Future[preval_store.length];
-            int[][][] decodeArr = new int[preval_store.length][][];
-            int lastValidIndex = 0;
-
+            ArrayList<Integer> resultStore_time = new ArrayList<>();
+            ArrayList<int[][]>[] resultsStore = new ArrayList[Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_LENGTH];
+            int[][] currentStoreEntry;
             ExecutorService executor = null;
             int numInExe = 0;
 
-            if (decodeProgressFile.exists()) {
-                try (ObjectInputStream objIn = new ObjectInputStream(new FileInputStream(decodeProgressFile))) {
-                    decodeArr = (int[][][]) objIn.readObject();
-                    objIn.close();
-                } catch (IOException | ClassNotFoundException ex) {
-                    ex.printStackTrace(System.err);
-                }
-            }
+            if (extractInFull) {
+                System.out.println("Decoding preval store in " + resultDir.getAbsolutePath() + " in full");
 
-            for (int f = 0; f < preval_store.length; f++) {
-                if (decodeArr[f] != null) {
-                    System.out.println("Decoding of " + preval_store[f].getName()
-                            + "  skipped as array already exist from previous iteration");
-                } else {
+                Future<int[][]>[] decodedArrFuture = new Future[preval_store.length];
+                int[][][] decodeArr = new int[preval_store.length][][];
 
-                    if (executor == null) {
-                        executor = Executors.newFixedThreadPool(numThreads);
-                    }
-
-                    boolean submitThread = true;
-
-                    if (selIndexList != null) {
-
-                        Matcher m = usePrevalStore ? PATTERN_PREVAL_STORE.matcher(preval_store[f].getName())
-                                : PATTERN_POPFILE.matcher(preval_store[f].getName());
-                        if (m.find()) {
-                            int index = Integer.parseInt(m.group(1));
-                            submitThread = (Arrays.binarySearch(selIndexList, index) >= 0);
-                        }
-                    }
-
-                    if (submitThread) {
-
-                        decodedArrFuture[f] = executor.submit(new Callable_DecodeSinglePrevalStore(preval_store[f]));
-                        numInExe++;
-
-                        if (numInExe == numThreads) {
-
-                            executor.shutdown();
-
-                            if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
-                                System.out.println("Inf Thread time-out!");
-                            }
-                            executor = null;
-                            numInExe = 0;
-
+                if (decodeProgressFile.exists()) {
+                    try (ObjectInputStream objIn = new ObjectInputStream(new FileInputStream(decodeProgressFile))) {
+                        int key;
+                        boolean keepReading = true;
+                        while (keepReading) {
                             try {
+                                key = objIn.readInt();
+                                decodeArr[key] = (int[][]) objIn.readObject();
+                            } catch (EOFException ex) {
+                                keepReading = false;
+                            }
+                        }
 
-                                for (int i = lastValidIndex; i < decodeArr.length; i++) {
-                                    if (decodeArr[i] != null) {
-                                        lastValidIndex = i;
-                                    } else if (decodedArrFuture[i] != null) {
-                                        decodeArr[i] = decodedArrFuture[i].get();
-                                    }
+                    } catch (IOException | ClassNotFoundException ex) {
+                        ex.printStackTrace(System.err);
+                    }
+                }
+
+                for (int f = 0; f < preval_store.length; f++) {
+                    if (decodeArr[f] != null) {
+                        System.out.println("Decoding of " + preval_store[f].getName()
+                                + "  skipped as array already exist from previous iteration");
+                    } else {
+
+                        if (executor == null) {
+                            executor = Executors.newFixedThreadPool(numThreads);
+                        }
+
+                        boolean submitThread = true;
+
+                        if (selIndexList != null) {
+
+                            Matcher m = usePrevalStore ? PATTERN_PREVAL_STORE.matcher(preval_store[f].getName())
+                                    : PATTERN_POPFILE.matcher(preval_store[f].getName());
+                            if (m.find()) {
+                                int index = Integer.parseInt(m.group(1));
+                                submitThread = (Arrays.binarySearch(selIndexList, index) >= 0);
+                            }
+                        }
+
+                        if (submitThread) {
+
+                            decodedArrFuture[f] = executor.submit(new Callable_DecodeSinglePrevalStoreFull(preval_store[f]));
+                            numInExe++;
+
+                            if (numInExe == numThreads) {
+
+                                executor.shutdown();
+
+                                if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
+                                    System.out.println("Inf Thread time-out!");
                                 }
-                                ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(decodeProgressFile));
-                                objOut.writeObject(decodeArr);
-                                objOut.close();
-                            } catch (IOException ex) {
-                                ex.printStackTrace(System.err);
-                            }
+                                executor = null;
+                                numInExe = 0;
 
-                        }
-                    }
-                }
-
-            }
-
-            if (executor != null) {
-                executor.shutdown();
-
-                if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
-                    System.out.println("Inf Thread time-out!");
-                }
-
-                try {
-                    for (int i = 0; i < decodeArr.length; i++) {
-                        if (decodeArr[i] == null && decodedArrFuture[i] != null) {
-                            decodeArr[i] = decodedArrFuture[i].get();
-                        }
-                    }
-                    ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(decodeProgressFile));
-                    objOut.writeObject(decodeArr);
-                    objOut.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace(System.err);
-                }
-            }
-
-            ArrayList<Integer> resultStore_time = new ArrayList<>();
-            ArrayList<int[][]>[] resultsStore = new ArrayList[Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_LENGTH];
-
-            for (int i = 0; i < resultsStore.length; i++) {
-                resultsStore[i] = new ArrayList<>();
-            }
-
-            int[][] currentStoreEntry;
-            int maxTimeStamp = Integer.MIN_VALUE;
-
-            for (int f = 0; f < preval_store.length; f++) {
-                if (decodeArr[f] != null) {
-                    int[][] entCollection = decodeArr[f];
-                    for (int[] entry : entCollection) {
-                        int timeIndex;
-                        if (maxTimeStamp < entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]) {
-                            // New row
-                            resultStore_time.add(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]);
-                            for (ArrayList<int[][]> resultsStoreEnt : resultsStore) {
-                                // int[fIndex][# total, # infected]
-                                resultsStoreEnt.add(new int[preval_store.length][2]);
-                            }
-                            timeIndex = resultStore_time.size() - 1;
-                        } else {
-                            timeIndex = resultStore_time.lastIndexOf(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]);
-                        }
-
-                        if (timeIndex < 0) {
-                            System.err.println("Time index of " + entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME] + " not found. New row added.");
-                            Integer addTime = entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME];
-                            Integer[] timeArr = resultStore_time.toArray(new Integer[resultStore_time.size()]);
-                            int insertPt = Arrays.binarySearch(timeArr, addTime);
-                            insertPt = -(insertPt + 1);
-                            resultStore_time.add(insertPt, addTime);
-                            for (ArrayList<int[][]> resultsStoreEnt : resultsStore) {
-                                // int[fIndex][# total, # infected]
-                                resultsStoreEnt.add(insertPt, new int[preval_store.length][2]);
-                            }
-                            timeIndex = insertPt;
-                        }
-                        for (int storeIndex = 0; storeIndex < resultsStore.length; storeIndex++) {
-                            currentStoreEntry = resultsStore[storeIndex].get(timeIndex);
-                            switch (storeIndex) {
-                                case Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_TOTAL:
-                                    currentStoreEntry[f][0]++;
-                                    if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
-                                        currentStoreEntry[f][1]++;
+                                try {
+                                    ObjectOutputStream objOut
+                                            = AppendableObjOutstream.generateFromFile(decodeProgressFile);
+                                    for (int i = 0; i < decodeArr.length; i++) {
+                                        if (decodeArr[i] == null && decodedArrFuture[i] != null) {
+                                            objOut.writeInt(i);
+                                            objOut.writeObject(decodedArrFuture[i].get());
+                                        }
                                     }
-                                    break;
-                                case Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_ACCEPT:
-                                    if (16 * AbstractIndividualInterface.ONE_YEAR_INT <= entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE]
-                                            && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE] < 30 * AbstractIndividualInterface.ONE_YEAR_INT
-                                            && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
+                                    objOut.close();
+                                } catch (IOException ex) {
+                                    ex.printStackTrace(System.err);
+                                }
+
+                            }
+                        }
+                    }
+
+                }
+
+                if (executor != null) {
+                    executor.shutdown();
+                    if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
+                        System.out.println("Inf Thread time-out!");
+                    }
+                    try {
+                        ObjectOutputStream objOut
+                                = AppendableObjOutstream.generateFromFile(decodeProgressFile);
+                        for (int i = 0; i < decodeArr.length; i++) {
+                            if (decodeArr[i] == null && decodedArrFuture[i] != null) {
+                                objOut.writeInt(i);
+                                decodeArr[i] = decodedArrFuture[i].get();
+                            }
+                        }
+
+                        objOut.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace(System.err);
+                    }
+                }
+
+                for (int i = 0; i < resultsStore.length; i++) {
+                    resultsStore[i] = new ArrayList<>();
+                }
+
+                int maxTimeStamp = Integer.MIN_VALUE;
+
+                for (int f = 0; f < preval_store.length; f++) {
+                    if (decodeArr[f] != null) {
+                        int[][] entCollection = decodeArr[f];
+                        for (int[] entry : entCollection) {
+                            int timeIndex;
+                            if (maxTimeStamp < entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]) {
+                                // New row
+                                resultStore_time.add(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]);
+                                for (ArrayList<int[][]> resultsStoreEnt : resultsStore) {
+                                    // int[fIndex][# total, # infected]
+                                    resultsStoreEnt.add(new int[preval_store.length][2]);
+                                }
+                                timeIndex = resultStore_time.size() - 1;
+                            } else {
+                                timeIndex = resultStore_time.lastIndexOf(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]);
+                            }
+
+                            if (timeIndex < 0) {
+                                System.err.println("Time index of " + entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME] + " not found. New row added.");
+                                Integer addTime = entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME];
+                                Integer[] timeArr = resultStore_time.toArray(new Integer[resultStore_time.size()]);
+                                int insertPt = Arrays.binarySearch(timeArr, addTime);
+                                insertPt = -(insertPt + 1);
+                                resultStore_time.add(insertPt, addTime);
+                                for (ArrayList<int[][]> resultsStoreEnt : resultsStore) {
+                                    // int[fIndex][# total, # infected]
+                                    resultsStoreEnt.add(insertPt, new int[preval_store.length][2]);
+                                }
+                                timeIndex = insertPt;
+                            }
+                            for (int storeIndex = 0; storeIndex < resultsStore.length; storeIndex++) {
+                                currentStoreEntry = resultsStore[storeIndex].get(timeIndex);
+                                switch (storeIndex) {
+                                    case Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_TOTAL:
                                         currentStoreEntry[f][0]++;
                                         if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
                                             currentStoreEntry[f][1]++;
                                         }
-                                    }
-                                    break;
-                                default:
-                                    if (storeIndex >= Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER
-                                            && storeIndex < Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()) {
-
-                                        int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
-                                                entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
-
-                                        if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER == index) {
-                                            currentStoreEntry[f][0]++;
-                                            if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
-                                                currentStoreEntry[f][1]++;
-                                            }
-                                        }
-
-                                    } else if (storeIndex >= Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT
-                                            && storeIndex < Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()) {
-
-                                        int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
-                                                entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
-
-                                        if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT == index
+                                        break;
+                                    case Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_ACCEPT:
+                                        if (16 * AbstractIndividualInterface.ONE_YEAR_INT <= entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE]
+                                                && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE] < 30 * AbstractIndividualInterface.ONE_YEAR_INT
                                                 && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
                                             currentStoreEntry[f][0]++;
                                             if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
                                                 currentStoreEntry[f][1]++;
                                             }
                                         }
+                                        break;
+                                    default:
+                                        if (storeIndex >= Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER
+                                                && storeIndex < Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()) {
 
-                                    } else {
+                                            int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
+                                                    entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
 
-                                        if (selIndexList != null) {
-                                            System.err.println("Result store index #" + storeIndex + " not defined");
+                                            if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER == index) {
+                                                currentStoreEntry[f][0]++;
+                                                if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
+                                                    currentStoreEntry[f][1]++;
+                                                }
+                                            }
+
+                                        } else if (storeIndex >= Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT
+                                                && storeIndex < Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()) {
+
+                                            int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
+                                                    entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
+
+                                            if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT == index
+                                                    && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
+                                                currentStoreEntry[f][0]++;
+                                                if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
+                                                    currentStoreEntry[f][1]++;
+                                                }
+                                            }
+
                                         } else {
-                                            System.out.println("Result store index #" + storeIndex + " skipped");
-                                        }
-                                    }
-                            }
-                        }
-                        maxTimeStamp = Math.max(maxTimeStamp, entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]);
 
+                                            if (selIndexList != null) {
+                                                System.err.println("Result store index #" + storeIndex + " not defined");
+                                            } else {
+                                                System.out.println("Result store index #" + storeIndex + " skipped");
+                                            }
+                                        }
+                                }
+                            }
+                            maxTimeStamp = Math.max(maxTimeStamp, entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GLOBAL_TIME]);
+
+                        }
                     }
                 }
+            } else {
+                HashMap<Integer, int[][]>[] decodeArr = new HashMap[preval_store.length];
+                Future<HashMap<Integer, int[][]>>[] decodedArrFuture = new Future[preval_store.length];
+                System.out.println("Decoding preval store in " + resultDir.getAbsolutePath());
+
+                if (decodeProgressFile.exists()) {
+                    try (ObjectInputStream objIn = new ObjectInputStream(new FileInputStream(decodeProgressFile))) {
+                        int key;
+                        boolean keepReading = true;
+                        while (keepReading) {
+                            try {
+                                key = objIn.readInt();
+                                decodeArr[key] = (HashMap<Integer, int[][]>) objIn.readObject();
+                            } catch (EOFException | OptionalDataException ex) {
+                                keepReading = false;
+                            }
+                        }
+
+                    } catch (IOException | ClassNotFoundException ex) {
+                        ex.printStackTrace(System.err);
+                    }
+                }
+
+                for (int f = 0; f < preval_store.length; f++) {
+                    if (decodeArr[f] != null) {
+                        System.out.println("Decoding of " + preval_store[f].getName()
+                                + " skipped as array already exist from previous iteration");
+                    } else {
+
+                        if (executor == null) {
+                            executor = Executors.newFixedThreadPool(numThreads);
+                        }
+
+                        boolean submitThread = true;
+
+                        if (selIndexList != null) {
+
+                            Matcher m = usePrevalStore ? PATTERN_PREVAL_STORE.matcher(preval_store[f].getName())
+                                    : PATTERN_POPFILE.matcher(preval_store[f].getName());
+                            if (m.find()) {
+                                int index = Integer.parseInt(m.group(1));
+                                submitThread = (Arrays.binarySearch(selIndexList, index) >= 0);
+                            }
+                        }
+
+                        if (submitThread) {
+                            decodedArrFuture[f] = executor.submit(new Callable_DecodeSinglePrevalStoreSummary(preval_store[f], selIndexList));
+                            numInExe++;
+
+                            if (numInExe == numThreads) {
+                                executor.shutdown();
+                                if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
+                                    System.out.println("Inf Thread time-out!");
+                                }
+                                executor = null;
+                                numInExe = 0;
+                                try {
+                                    ObjectOutputStream objOut
+                                            = AppendableObjOutstream.generateFromFile(decodeProgressFile);
+                                    for (int i = 0; i < decodeArr.length; i++) {
+                                        if (decodeArr[i] == null && decodedArrFuture[i] != null) {
+                                            decodeArr[i] = decodedArrFuture[i].get();
+                                            objOut.writeInt(i);
+                                            objOut.writeObject(decodeArr[i]);
+                                        }
+                                    }
+                                    objOut.close();
+                                } catch (IOException ex) {
+                                    ex.printStackTrace(System.err);
+                                }
+
+                            }
+                        }
+                    }
+                }
+
+                if (executor != null) {
+                    executor.shutdown();
+                    if (!executor.awaitTermination(2, TimeUnit.DAYS)) {
+                        System.out.println("Inf Thread time-out!");
+                    }
+                    try {
+                        ObjectOutputStream objOut
+                                = AppendableObjOutstream.generateFromFile(decodeProgressFile);
+                        for (int i = 0; i < decodeArr.length; i++) {
+                            if (decodeArr[i] == null && decodedArrFuture[i] != null) {
+                                objOut.writeInt(i);
+                                decodeArr[i] = decodedArrFuture[i].get();
+                                objOut.writeObject(decodeArr[i]);
+                            }
+                        }
+
+                        objOut.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace(System.err);
+                    }
+                }
+
+                for (int i = 0; i < resultsStore.length; i++) {
+                    resultsStore[i] = new ArrayList<>();
+                }
+
+                for (int f = 0; f < decodeArr.length; f++) {
+                    HashMap<Integer, int[][]> ent = decodeArr[f];
+                    Integer[] timeList = ent.keySet().toArray(new Integer[ent.size()]);
+                    Arrays.sort(timeList);
+                    for (int timeIndex = 0; timeIndex < timeList.length; timeIndex++) {
+                        if (f == 0) {
+                            resultStore_time.add(timeList[timeIndex]);
+                            for (ArrayList<int[][]> resultsStoreEnt : resultsStore) {
+                                // int[fIndex][# total, # infected]
+                                resultsStoreEnt.add(new int[preval_store.length][2]);
+                            }
+                        }
+                        for (int storeIndex = 0; storeIndex < resultsStore.length; storeIndex++) {
+                            int[] preval_ent = ent.get(timeList[timeIndex])[storeIndex];
+                            for (int i = 0; i < preval_ent.length; i++) {
+                                (resultsStore[storeIndex].get(timeIndex))[f][i] = preval_ent[i];
+                            }
+
+                        }
+                    }
+
+                }
+
             }
 
             PrintWriter[] pWri = new PrintWriter[Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_LENGTH];
@@ -1051,13 +1195,110 @@ public class Snapshot_Population_ACCEPtPlus {
 
     }
 
-    private static class Callable_DecodeSinglePrevalStore implements Callable<int[][]> {
+    private static class Callable_DecodeSinglePrevalStoreSummary implements Callable<HashMap<Integer, int[][]>> {
+
+        File prevalZip;
+        Integer[] selIndexList = null;
+
+        public Callable_DecodeSinglePrevalStoreSummary(File prevalZip, Integer[] selIndexList) {
+            this.prevalZip = prevalZip;
+            this.selIndexList = selIndexList;
+        }
+
+        @Override
+        public HashMap<Integer, int[][]> call() throws Exception {
+
+            // Key = time,
+            // Entry = int[fIndex][# total, # infected]
+            HashMap<Integer, int[][]> outputMap = new HashMap();
+            System.out.println("Decoding preval store in " + prevalZip.getAbsolutePath() + " (Simple decode)");
+            ArrayList<int[]> resultStore = extractResultStore(prevalZip);
+
+            int[][] resArr = new int[resultStore.size()][];
+            resArr = resultStore.toArray(resArr);
+
+            for (int[] entry : resArr) {
+                int t = entry[PREVAL_STORE_GLOBAL_TIME];
+                int[][] ent;
+                ent = outputMap.get(t);
+                if (ent == null) {
+                    ent = new int[RES_PREVAL_STORE_LENGTH][2];
+                    outputMap.put(t, ent);
+                }
+
+                for (int storeIndex = 0; storeIndex < ent.length; storeIndex++) {
+                    switch (storeIndex) {
+                        case Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_TOTAL:
+                            ent[storeIndex][0]++;
+                            if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
+                                ent[storeIndex][1]++;
+                            }
+                            break;
+                        case Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_ACCEPT:
+                            if (16 * AbstractIndividualInterface.ONE_YEAR_INT <= entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE]
+                                    && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE] < 30 * AbstractIndividualInterface.ONE_YEAR_INT
+                                    && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
+                                ent[storeIndex][0]++;
+                                if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
+                                    ent[storeIndex][1]++;
+                                }
+                            }
+                            break;
+                        default:
+                            if (storeIndex >= Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER
+                                    && storeIndex < Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()) {
+
+                                int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
+                                        entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
+
+                                if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER == index) {
+                                    ent[storeIndex][0]++;
+                                    if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
+                                        ent[storeIndex][1]++;
+                                    }
+                                }
+
+                            } else if (storeIndex >= Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT
+                                    && storeIndex < Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT + CLASSIFIER_ACCEPT_GENDER_AGE_GRP.numClass()) {
+
+                                int index = CLASSIFIER_AGE_INDEX(entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_AGE],
+                                        entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_GENDER] == 0);
+
+                                if (storeIndex - Snapshot_Population_ACCEPtPlus.RES_PREVAL_STORE_BY_GENDER_AGE_CLASSIFIER_ACCEPT == index
+                                        && entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_NUM_LIFETIME_PARTNERS] > 0) {
+                                    ent[storeIndex][0]++;
+                                    if (entry[Runnable_Population_ACCEPtPlus_Infection.PREVAL_STORE_INFECT_STATUS] != AbstractIndividualInterface.INFECT_S) {
+                                        ent[storeIndex][1]++;
+                                    }
+                                }
+
+                            } else {
+                                if (selIndexList != null) {
+                                    System.err.println("Result store index #" + storeIndex + " not defined");
+                                } else {
+                                    System.out.println("Result store index #" + storeIndex + " skipped");
+                                }
+                            }
+
+                    }
+
+                }
+
+            }
+
+            return outputMap;
+
+        }
+
+    }
+
+    private static class Callable_DecodeSinglePrevalStoreFull implements Callable<int[][]> {
 
         File prevalZip;
 
         File prevalZipDecoded;
 
-        public Callable_DecodeSinglePrevalStore(File prevalZip) {
+        public Callable_DecodeSinglePrevalStoreFull(File prevalZip) {
             this.prevalZip = prevalZip;
             this.prevalZipDecoded = new File(prevalZip.getParentFile(), prevalZip.getName() + ".decoded");
         }
@@ -1085,42 +1326,9 @@ public class Snapshot_Population_ACCEPtPlus {
 
             }
 
-            ArrayList<int[]> resultStore = new ArrayList<>();
-
             System.out.println("Decoding preval store in " + prevalZip.getAbsolutePath());
 
-            File tempFile = FileZipper.unzipFile(prevalZip, prevalZip.getParentFile());
-            ObjectInputStream inStream = new ObjectInputStream(new FileInputStream(tempFile));
-
-            if (prevalZip.getName().startsWith(PREVAL_STORE_PREFIX)) {
-                try {
-                    while (true) {
-                        int[] ent = (int[]) inStream.readObject();
-                        resultStore.add(ent);
-                    }
-                } catch (EOFException ex) {
-
-                }
-                inStream.close();
-                tempFile.delete();
-
-            } else {
-                // Using population file instead
-                Population_ACCEPtPlus pop = Population_ACCEPtPlus.decodeFromStream(inStream);
-                inStream.close();
-                tempFile.delete();
-                for (AbstractIndividualInterface person : pop.getPop()) {
-                    int[] ent = new int[PREVAL_STORE_TOTAL_LENGTH];
-                    ent[PREVAL_STORE_GLOBAL_TIME] = pop.getGlobalTime();
-                    ent[PREVAL_STORE_PERSON_ID] = person.getId();
-                    ent[PREVAL_STORE_GENDER] = person.isMale() ? 0 : 1;
-                    ent[PREVAL_STORE_AGE] = (int) person.getAge();
-                    ent[PREVAL_STORE_NUM_LIFETIME_PARTNERS] = ((Person_ACCEPtPlusSingleInflection) person).getPartnerHistoryLifetimePt();
-                    ent[PREVAL_STORE_INFECT_STATUS] = person.getInfectionStatus()[0];
-                    resultStore.add(ent);
-                }
-
-            }
+            ArrayList<int[]> resultStore = extractResultStore(prevalZip);
 
             int[][] resArr = new int[resultStore.size()][];
             resArr = resultStore.toArray(resArr);
@@ -1132,18 +1340,44 @@ public class Snapshot_Population_ACCEPtPlus {
                 }
             });
 
-            /*
-            try {
-                ObjectOutputStream objOut = new ObjectOutputStream(new FileOutputStream(prevalZipDecoded));
-                objOut.writeObject(resArr);
-                objOut.close();
-            } catch (Exception ex) {
-                ex.printStackTrace(System.err);
-            }
-             */
             return resArr;
         }
+    }
 
+    protected static ArrayList<int[]> extractResultStore(File prevalZip) throws IOException, ClassNotFoundException {
+        ArrayList<int[]> resultStore = new ArrayList<>();
+        File tempFile = FileZipper.unzipFile(prevalZip, prevalZip.getParentFile());
+        ObjectInputStream inStream = new ObjectInputStream(new FileInputStream(tempFile));
+        if (prevalZip.getName().startsWith(PREVAL_STORE_PREFIX)) {
+            try {
+                while (true) {
+                    int[] ent = (int[]) inStream.readObject();
+                    resultStore.add(ent);
+                }
+            } catch (EOFException ex) {
+
+            }
+            inStream.close();
+            tempFile.delete();
+
+        } else {
+            // Using population file instead
+            Population_ACCEPtPlus pop = Population_ACCEPtPlus.decodeFromStream(inStream);
+            inStream.close();
+            tempFile.delete();
+            for (AbstractIndividualInterface person : pop.getPop()) {
+                int[] ent = new int[PREVAL_STORE_TOTAL_LENGTH];
+                ent[PREVAL_STORE_GLOBAL_TIME] = pop.getGlobalTime();
+                ent[PREVAL_STORE_PERSON_ID] = person.getId();
+                ent[PREVAL_STORE_GENDER] = person.isMale() ? 0 : 1;
+                ent[PREVAL_STORE_AGE] = (int) person.getAge();
+                ent[PREVAL_STORE_NUM_LIFETIME_PARTNERS] = ((Person_ACCEPtPlusSingleInflection) person).getPartnerHistoryLifetimePt();
+                ent[PREVAL_STORE_INFECT_STATUS] = person.getInfectionStatus()[0];
+                resultStore.add(ent);
+            }
+
+        }
+        return resultStore;
     }
 
     public static void decodeResults(File resultDir, boolean decodeBase, boolean decodePreval)
