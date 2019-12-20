@@ -2,6 +2,7 @@ package sim;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -13,8 +14,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import opt.Abstract_Population_ACCEPtPlus_IntroInfection_Optimisation;
 import opt.OptRun_Population_ACCEPtPlus_IntroInfection_GA_Optimisation;
 import opt.OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation;
@@ -36,7 +35,7 @@ import util.Snapshot_Population_ACCEPtPlus;
  *
  */
 public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
-    
+
     public static final String[] PROP_NAME_ACCEPT = {
         "PROP_SKIP_DATA_SET", // For simulation batch: Binary number indices to skip which scenario, or -1 if not used, For optimistion - Binary number indices for targetPrevalSel
         "PROP_INTRO_TYPE", // Intro type:  0 = no intro, 1 = initial, 2 = periodic
@@ -45,23 +44,23 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
     };
     public static final Class[] PROP_CLASS_ACCEPT = {
         Integer.class, Integer.class, Integer.class, float[].class};
-    
+
     public static final int PROP_SKIP_DATA_SET = PROP_NAME.length;
     public static final int PROP_INTRO_TYPE = PROP_SKIP_DATA_SET + 1;
     public static final int PROP_ACCEPT_SIM_TYPE = PROP_INTRO_TYPE + 1;
     public static final int PROP_MASS_SRN_SETTING = PROP_ACCEPT_SIM_TYPE + 1;
-    
+
     public static final String POP_PROP_INIT_PREFIX = "POP_PROP_INIT_PREFIX_";
     protected String[] propModelInitStr = null;
-    
+
     public static final String POP_SINGLE_RUN_PARAM_PREFIX = "POP_SINGLE_RUN_PARAM_PREFIX_";
     protected String[] propSingleRunParamStr = null;
-    
+
     protected Object[] propVal = new Object[PROP_NAME.length + PROP_NAME_ACCEPT.length];
     protected File baseDir = new File("");
-    
+
     protected boolean stopNextTurn = false;
-    
+
     @Override
     public void loadProperties(Properties prop) {
         for (int i = 0; i < PROP_NAME.length; i++) {
@@ -76,7 +75,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 propVal[i] = PropValUtils.propStrToObject(ent, PROP_CLASS_ACCEPT[i - PROP_NAME.length]);
             }
         }
-        
+
         int maxFieldPropInitNum = 0;
         for (Iterator<Object> it = prop.keySet().iterator(); it.hasNext();) {
             String k = (String) it.next();
@@ -87,7 +86,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 }
             }
         }
-        
+
         if (maxFieldPropInitNum >= 0) {
             propModelInitStr = new String[maxFieldPropInitNum + 1];
             for (int i = 0; i < propModelInitStr.length; i++) {
@@ -108,9 +107,9 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 propSingleRunParamStr[i] = res;
             }
         }
-        
+
     }
-    
+
     @Override
     public Properties generateProperties() {
         Properties prop = new Properties();
@@ -121,32 +120,32 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
             prop.setProperty(PROP_NAME_ACCEPT[i - PROP_NAME.length],
                     PropValUtils.objectToPropStr(propVal[i], PROP_CLASS_ACCEPT[i - PROP_CLASS.length]));
         }
-        
+
         return prop;
     }
-    
+
     @Override
     public void setBaseDir(File baseDir) {
         this.baseDir = baseDir;
     }
-    
+
     @Override
     public void setStopNextTurn(boolean stopNextTurn) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
     @Override
     public void setSnapshotSetting(PersonClassifier[] snapshotCountClassifier, boolean[] snapshotCountAccum) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
     @Override
     public void generateOneResultSet() throws IOException, InterruptedException {
         String[] rArg;
         int simType = propVal[PROP_ACCEPT_SIM_TYPE] == null ? 0 : ((Integer) propVal[PROP_ACCEPT_SIM_TYPE]);
-        
+
         switch (simType) {
-            
+
             case 1:
             case 2:
                 Abstract_Population_ACCEPtPlus_IntroInfection_Optimisation runOpt;
@@ -160,7 +159,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                     rArg[5] = "0";
                     rArg[6] = "500";
                     runOpt = new OptRun_Population_ACCEPtPlus_IntroInfection_GA_Optimisation(rArg);
-                    
+
                 } else {
                     rArg = new String[6];
                     rArg[0] = baseDir.getAbsolutePath();
@@ -171,7 +170,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                     rArg[5] = "0";
                     runOpt = new OptRun_Population_ACCEPtPlus_IntroInfection_Optimisation(rArg);
                 }
-                
+
                 double[] preOptParam = new double[propModelInitStr.length];
                 for (int v = 0; v < propModelInitStr.length; v++) {
                     if (propModelInitStr[v] != null) {
@@ -182,7 +181,7 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                     }
                 }
                 runOpt.setPreOptParameter(preOptParam);
-                
+
                 if (propVal[PROP_SKIP_DATA_SET] != null) {
                     int indices = (Integer) propVal[PROP_SKIP_DATA_SET];
                     boolean[] tarPrevalSel = runOpt.getTargetPrevalSel();
@@ -190,9 +189,9 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                         tarPrevalSel[i] = (indices & 1 << ((tarPrevalSel.length - 1) - i)) != 0;
                     }
                     runOpt.setTargetPrevalSel(tarPrevalSel);
-                    
+
                 }
-                
+
                  {
                     try {
                         runOpt.runOptimisation();
@@ -200,11 +199,11 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                         ex.printStackTrace(System.err);
                     }
                 }
-                
+
                 break;
-            
+
             default:
-                
+
                 rArg = new String[8];
                 rArg[0] = baseDir.getAbsolutePath();
                 rArg[1] = propVal[PROP_POP_IMPORT_PATH] == null ? "" : (String) propVal[PROP_POP_IMPORT_PATH];
@@ -214,10 +213,10 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                 rArg[5] = propVal[PROP_SNAP_FREQ] == null ? "" : ((Integer) propVal[PROP_SNAP_FREQ]).toString();
                 rArg[6] = propVal[PROP_NUM_SNAP] == null ? "" : ((Integer) propVal[PROP_NUM_SNAP]).toString();
                 rArg[7] = propVal[PROP_MASS_SRN_SETTING] == null ? "" : Arrays.toString((float[]) propVal[PROP_MASS_SRN_SETTING]);
-                
+
                 try {
                     Run_Population_ACCEPtPlus_InfectionIntro_Batch run = new Run_Population_ACCEPtPlus_InfectionIntro_Batch(rArg);
-                    
+
                     run.set_NUM_THREADS(propVal[PROP_USE_PARALLEL] == null ? Runtime.getRuntime().availableProcessors() : ((Integer) propVal[PROP_USE_PARALLEL]));
                     for (int v = 0; v < propModelInitStr.length; v++) {
                         if (propModelInitStr[v] != null) {
@@ -225,22 +224,22 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                             run.getParameter()[v] = Double.parseDouble(propModelInitStr[v]);
                         }
                     }
-                    
+
                     if (propVal[PROP_POP_SELECT_CSV] != null) {
                         File csv = new File(propVal[PROP_POP_SELECT_CSV].toString());
                         ArrayList<Integer> arr = null;
                         HashMap<Integer, double[]> popParamMap = new HashMap();
-                        
+
                         try {
                             try (BufferedReader lines = new BufferedReader(new FileReader(csv))) {
                                 arr = new ArrayList();
                                 String line;
-                                
+
                                 while ((line = lines.readLine()) != null) {
                                     String[] ent = line.split(",");
                                     Integer popSelect = Integer.parseInt(ent[0]);
                                     arr.add(popSelect);
-                                    
+
                                     if (ent.length > 0) {
                                         double[] param = new double[ent.length - 1];
                                         for (int p = 0; p < param.length; p++) {
@@ -260,84 +259,110 @@ public class Simulation_Population_ACCEPtPlus implements SimulationInterface {
                             run.setPopSelction(popSel);
                             run.setPopParamMap(popParamMap);
                         }
-                        
+
                     }
-                    
+
                     if (propSingleRunParamStr != null) {
                         baseDir.mkdirs();
                         run.singleRun(baseDir, propSingleRunParamStr);
                     }
-                    
+
                     if (((Integer) propVal[PROP_SKIP_DATA_SET]) >= 0) {
                         run.batchRun();
                     }
-                    
+
                 } catch (ClassNotFoundException ex) {
                     ex.printStackTrace(System.err);
                 }
         }
-        
+
     }
-    
+
     public static void main(String[] arg) throws IOException, InterruptedException, ClassNotFoundException {
-        String path = arg[0]; // Location of .prop file
+        String path = arg[0]; // Location of .prop file, or directory for prop                                        
 
         File dir = new File(path);
-        
-        boolean genResults = true;
 
-        // Addtional options
-        if (arg.length > 1) {            
-            if (arg[1].startsWith("decodeOnly")) {
-                genResults = false;
-            }            
+        File propFile = new File(dir, SimulationInterface.FILENAME_PROP);
+
+        File[] propFileDirCollection;
+
+        if (propFile.exists()) {
+            propFileDirCollection = new File[]{dir};
+        } else {
+            propFileDirCollection = new File(path).listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File file) {
+                    return file.isDirectory()
+                            && new File(file, SimulationInterface.FILENAME_PROP).exists();
+                }
+            });
+
         }
         
-        if (genResults) {
-            
-            System.out.println("Generating results set as described in " + dir.getAbsolutePath());
-            
+        
+
+        for (File propDir : propFileDirCollection) {
+            System.out.println("Running simulation stored in " + propDir.getAbsolutePath());
+            runSingleResult(arg, propDir);
+        }
+
+    }
+
+    protected static void runSingleResult(String[] arg, File propFileDir) throws NumberFormatException, IOException, ClassNotFoundException, InterruptedException {
+        boolean genResults = true;
+        
+        File propFile = new File(propFileDir, SimulationInterface.FILENAME_PROP);
+
+        // Addtional options
+        if (arg.length > 1) {
+            if (arg[1].startsWith("decodeOnly")) {
+                genResults = false;
+            }
+        }
+
+        if (genResults) {                        
+
+            System.out.println("Generating results set as described in " + propFile.getAbsolutePath());
+
             Simulation_Population_ACCEPtPlus sim = new Simulation_Population_ACCEPtPlus();
-            
-            File propFile = new File(dir, SimulationInterface.FILENAME_PROP);
-            
+
             if (!propFile.exists()) {
-                
+
                 System.err.println("Error: PROP file " + propFile.getCanonicalPath() + " not found.");
-                
+
             } else {
                 Path propFilePath = propFile.toPath();
-                
+
                 Properties prop;
                 prop = new Properties();
                 try (InputStream inStr = java.nio.file.Files.newInputStream(propFilePath)) {
                     prop.loadFromXML(inStr);
                 }
-                
-                sim.setBaseDir(dir);
+
+                sim.setBaseDir(propFile.getParentFile());
                 sim.loadProperties(prop);
                 sim.generateOneResultSet();
-                
+
             }
         }
-        
+
         if (arg.length > 1) {
             boolean decodeBasePop = arg[1].contains("_base");
-            boolean decodePrevalence = arg[1].contains("_preval");     
-            
+            boolean decodePrevalence = arg[1].contains("_preval");
+
             int numThread = Runtime.getRuntime().availableProcessors();
-            
-            if(arg.length > 2){
+
+            if (arg.length > 2) {
                 numThread = Integer.parseInt(arg[2]);
             }
-            
+
             try {
-                Snapshot_Population_ACCEPtPlus.decodeResults(dir, decodeBasePop, decodePrevalence, numThread);
+                Snapshot_Population_ACCEPtPlus.decodeResults(propFile.getParentFile(), decodeBasePop, decodePrevalence, numThread);
             } catch (FileNotFoundException | ExecutionException ex) {
                 ex.printStackTrace(System.err);
             }
         }
-        
     }
-    
+
 }
