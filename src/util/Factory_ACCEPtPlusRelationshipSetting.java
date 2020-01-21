@@ -44,9 +44,9 @@ public class Factory_ACCEPtPlusRelationshipSetting {
 
     private static final float[][] ASHR2_ACT_FREQ_PER_DAY // gender, age
             = { // Male
-                {1.97f/7, 2.16f/7, 1.39f/7, 1.36f/7, 1.15f/7, 1.00f/7},
+                {1.97f / 7, 2.16f / 7, 1.39f / 7, 1.36f / 7, 1.15f / 7, 1.00f / 7},
                 // Female               
-                {1.88f/7, 1.99f/7, 1.43f/7, 1.37f/7, 1.20f/7, 0.93f/7}
+                {1.88f / 7, 1.99f / 7, 1.43f / 7, 1.37f / 7, 1.20f / 7, 0.93f / 7}
             };
 
     private static final int[] ASHR_RELATIONSHIP_DURATION = {
@@ -74,6 +74,9 @@ public class Factory_ACCEPtPlusRelationshipSetting {
                 }
             };
 
+    private PersonClassifier condomUsageClassifier = null;
+    private float[] condomUsageRate = null;
+
     public Factory_ACCEPtPlusRelationshipSetting(RandomGenerator rng) {
         this.rng = rng;
     }
@@ -86,8 +89,8 @@ public class Factory_ACCEPtPlusRelationshipSetting {
             if (aI < 0) {
                 aI = -(aI + 1) - 1; // Left inclusive - i.e. age cannot be less than 16
             }
-            float prob = rng.nextFloat();            
-            acted = prob < ASHR2_ACT_FREQ_PER_DAY[pair[i].isMale()?0:1][aI];
+            float prob = rng.nextFloat();
+            acted = prob < ASHR2_ACT_FREQ_PER_DAY[pair[i].isMale() ? 0 : 1][aI];
         }
 
         return acted;
@@ -111,11 +114,27 @@ public class Factory_ACCEPtPlusRelationshipSetting {
                     + rng.nextInt(ASHR_RELATIONSHIP_DURATION[dI + 1] - ASHR_RELATIONSHIP_DURATION[dI]);
 
         }
-        rel.setDurations(relDur / 2);                        
+        rel.setDurations(relDur / 2);
+
+        float[] condomUsage = Arrays.copyOf(ASHR2_CONDOM_USAGE, ASHR2_CONDOM_USAGE.length);
+
+        if (condomUsageClassifier != null && condomUsageRate != null) {
+            for (int p = 0; p < pair.length; p++) {
+                int cI = condomUsageClassifier.classifyPerson(pair[p]);
+                if (cI >= 0) {
+                    condomUsage[p] = condomUsageRate[cI];
+                }
+            }
+
+        }
 
         // Condom usage  - randomly selected across gender               
-        rel.setCondomFreq(ASHR2_CONDOM_USAGE[rng.nextInt(1)]);
+        rel.setCondomFreq(condomUsage[rng.nextInt(1)]);
+    }
 
+    public void setAgeSpecficCondomUsage(PersonClassifier condomUsageClassifier, float[] condomUsageRate) {
+        this.condomUsageClassifier = condomUsageClassifier;
+        this.condomUsageRate = condomUsageRate;
     }
 
 }

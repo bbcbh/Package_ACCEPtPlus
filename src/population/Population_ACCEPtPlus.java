@@ -330,6 +330,16 @@ public class Population_ACCEPtPlus extends AbstractFieldsArrayPopulation {
         return rel;
     }
 
+    public Factory_ACCEPtPlusRelationshipSetting getRELATIONSHIP_SETTING() {
+        return RELATIONSHIP_SETTING;
+    }
+
+    public Factory_ACCEPtPlusPersonSetting getPERSON_SETTING() {
+        return PERSON_SETTING;
+    }
+    
+    
+
     protected void removeRelationship(RelationshipMap relMap, Relationship_ACCEPtPlus toBeRemoved, AbstractIndividualInterface[] partners) {
         int duration = getGlobalTime() - toBeRemoved.getRelStartTime();
         for (AbstractIndividualInterface p : partners) {

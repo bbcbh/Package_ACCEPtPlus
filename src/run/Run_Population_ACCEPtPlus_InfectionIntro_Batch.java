@@ -188,7 +188,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
     public static final int INDEX_MASS_SCREENING_SETTING = INDEX_INTRO_INFECTION + 1;
     public static final int INDEX_STORE_PREVAL_FREQ = INDEX_MASS_SCREENING_SETTING + 1;
     public static final int INDEX_PRESET_TRANMISSION_RATE = INDEX_STORE_PREVAL_FREQ + 1;
-    public static final int LENGTH_SINGLE_RUN_PARAM = INDEX_PRESET_TRANMISSION_RATE + 1;
+    public static final int INDEX_CONDOM_USAGE_BY_AGE_GENDER = INDEX_PRESET_TRANMISSION_RATE + 1;
+    public static final int LENGTH_SINGLE_RUN_PARAM = INDEX_CONDOM_USAGE_BY_AGE_GENDER + 1;
 
     public static final int BEST_FIT_PARAM_INTRO_RATE_MALE = 0; // If negative, only for first time step
     public static final int BEST_FIT_PARAM_INTRO_RATE_FEMALE = BEST_FIT_PARAM_INTRO_RATE_MALE + 1;
@@ -267,6 +268,9 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // INDEX_STORE_PREVAL_FREQ
         null,
         // INDEX_PRESET_TRANMISSION_RATE
+        null,
+        // INDEX_CONDOM_USAGE_BY_AGE_GENDER
+        // Object[] { PersonClassifier, float[] condomUsageRateByIndex
         null,};
 
     public static final Object[] INTERVENTION_RATE = {
@@ -301,6 +305,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
         // INDEX_STORE_PREVAL_FREQ
         null,
         // INDEX_PRESET_TRANMISSION_RATE
+        null,
+        // INDEX_CONDOM_USAGE_BY_AGE_GENDER
         null,};
 
     float[] DEFAULT_MASS_SRN_SETTING = {
@@ -988,6 +994,46 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         case INDEX_STORE_PREVAL_FREQ:
                             defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], Integer.class);
                             break;
+                        case INDEX_CONDOM_USAGE_BY_AGE_GENDER:
+                            defaultObj[i] = new Object[]{
+                                new PersonClassifier() {
+                                    @Override
+                                    public int classifyPerson(AbstractIndividualInterface p) {
+                                        int cI = -1;
+
+                                        if (p.getAge() >= 60 * AbstractIndividualInterface.ONE_YEAR_INT) {
+                                            return cI;
+                                        }
+
+                                        if (p.getAge() >= 16 * AbstractIndividualInterface.ONE_YEAR_INT) {
+                                            cI++;
+                                        }
+                                        if (p.getAge() >= 20 * AbstractIndividualInterface.ONE_YEAR_INT) {
+                                            cI++;
+                                        }
+                                        if (p.getAge() >= 30 * AbstractIndividualInterface.ONE_YEAR_INT) {
+                                            cI++;
+                                        }
+                                        if (p.getAge() >= 40 * AbstractIndividualInterface.ONE_YEAR_INT) {
+                                            cI++;
+                                        }
+                                        if (p.getAge() >= 50 * AbstractIndividualInterface.ONE_YEAR_INT) {
+                                            cI++;
+                                        }
+                                        if (!p.isMale()) {
+                                            cI += 5;
+                                        }
+                                        return cI;
+                                    }
+
+                                    @Override
+                                    public int numClass() {
+                                        return 10;
+                                    }
+                                },
+                                util.PropValUtils.propStrToObject(parameters_str[i], float[].class)
+                            };
+                            break;
                         default:
                             defaultObj[i] = util.PropValUtils.propStrToObject(parameters_str[i], DEFAULT_RATE[i].getClass());
 
@@ -1512,6 +1558,17 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                         textOutput.println("Contiunue retest rate for 30+ = "
                                 + Arrays.toString((float[]) sim.getRunnableParam()[Runnable_Population_ACCEPtPlus_Infection.RUNNABLE_INFECTION_CONTINUE_TEST_30_PLUS_RATE]));
                     }
+                    // Age specific condom usage
+                    if (param.length > INDEX_CONDOM_USAGE_BY_AGE_GENDER && param[INDEX_CONDOM_USAGE_BY_AGE_GENDER] != null) {
+
+                        PersonClassifier condomUsageClassifier = (PersonClassifier) ((Object[]) param[INDEX_CONDOM_USAGE_BY_AGE_GENDER])[0];
+                        float[] rate = (float[]) ((Object[]) param[INDEX_CONDOM_USAGE_BY_AGE_GENDER])[1];
+
+                        sim.getPopulation().getRELATIONSHIP_SETTING().setAgeSpecficCondomUsage(condomUsageClassifier, rate);
+
+                        textOutput.println("Condom usage = " + Arrays.toString(rate));
+
+                    }
 
                     // Mass screening
                     if (param.length > INDEX_MASS_SCREENING_SETTING && param[INDEX_MASS_SCREENING_SETTING] != null) {
@@ -1597,7 +1654,7 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     double[] trans = new double[]{
                         BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_FEMALE_TO_MALE] + BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_MALE_TO_FEMALE_EXTRA],
                         BEST_FIT_PARAMETER[BEST_FIT_PARAM_TRAN_FEMALE_TO_MALE],}; // M->F, F->M
-                    
+
                     boolean usePreset = false;
 
                     if (param.length > INDEX_PRESET_TRANMISSION_RATE) {
@@ -1610,9 +1667,9 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     BetaDistribution beta;
 
                     key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_MF_INDEX);
-                    
-                    if(usePreset){
-                       textOutput.println("Tranmission MF from preset value of " + Arrays.toString((double[]) new double[]{trans[0], 0}));
+
+                    if (usePreset) {
+                        textOutput.println("Tranmission MF from preset value of " + Arrays.toString((double[]) new double[]{trans[0], 0}));
                     } else if (trans[0] < 0) { // use original value if < 0
                         textOutput.println("Tranmission MF from existing value of " + Arrays.toString((double[]) ct_inf.getParameter(key)));
                     } else {
@@ -1633,8 +1690,8 @@ public class Run_Population_ACCEPtPlus_InfectionIntro_Batch {
                     }
 
                     key = ChlamydiaInfection.PARAM_DIST_PARAM_INDEX_REGEX.replaceAll("999", "" + ChlamydiaInfection.DIST_TRANS_FM_INDEX);
-                    
-                    if(usePreset){
+
+                    if (usePreset) {
                         textOutput.println("Tranmission FM from preset value of " + Arrays.toString((double[]) new double[]{trans[1], 0}));
                     } else if (trans[1] < 0) { // use original value if < 0)                         
                         textOutput.println("Tranmission FM from existing value of " + Arrays.toString((double[]) ct_inf.getParameter(key)));

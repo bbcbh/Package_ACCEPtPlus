@@ -51,8 +51,8 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
     public static final int RUNNABLE_INFECTION_TEST_SENSITIVITY = RUNNABLE_INFECTION_PARTNER_TREATMENT_CLASSIFIER + 1;
     public static final int RUNNABLE_INFECTION_CONTINUE_TEST_30_PLUS_CLASSIFIER = RUNNABLE_INFECTION_TEST_SENSITIVITY + 1;
     public static final int RUNNABLE_INFECTION_CONTINUE_TEST_30_PLUS_RATE = RUNNABLE_INFECTION_CONTINUE_TEST_30_PLUS_CLASSIFIER + 1;
-
     public static final int RUNNABLE_INFECTION_MASS_SCREENING_SETTING = RUNNABLE_INFECTION_CONTINUE_TEST_30_PLUS_RATE + 1;
+
 
     public static final Object[] DEFAULT_RUNNABLE_PARAM_INFECTION = {
         // 2: RUNNABLE_INFECTION_TESTING_COVERAGE
@@ -180,7 +180,8 @@ public class Runnable_Population_ACCEPtPlus_Infection extends Runnable_Populatio
         new float[]{1f, 1f, 1f},
         // 12: RUNNABLE_INFECTION_MASS_SCREENING_SETTING
         // Object[]{ PersonClassifier, treatment_rate_by_classIndex, int[][]{[at, duration]... } 
-        null,};
+        null,             
+    };
 
     protected ConcurrentHashMap<Integer, int[]> testingHistory = null;
     private final int DEFAULT_HIST_LENG = HIST_OFFSET_TOTAL_LENGTH * 5;
